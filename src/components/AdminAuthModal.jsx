@@ -129,7 +129,7 @@ export default function AdminAuthModal({
               KM100 <span className="text-orange-600 dark:text-orange-400">Admin Portal</span>
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
-              Authorized School Personnel & Security Verification
+              KM100 Skills and Training Center, Inc. • Security Verification
             </p>
           </div>
 

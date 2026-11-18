@@ -117,7 +117,7 @@ export default function StudentManager({
             <span>Student Information Directory</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Technical-Vocational Technology Programs (NC II) • Student Records & Barcode Badges
+            KM100 Skills and Training Center, Inc. • Technical-Vocational Programs (NC II)
           </p>
         </div>
 

@@ -62,7 +62,7 @@ export default function AttendanceLogView({ logs, students }) {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `School_Attendance_Report_${todayStr}.csv`);
+    link.setAttribute("download", `KM100_Attendance_Report_${todayStr}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -81,7 +81,7 @@ export default function AttendanceLogView({ logs, students }) {
             <span>Attendance Records & Scanner Logs</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Audit trail of all taps, time-in entries, dismissals, and gate logs.
+            KM100 Skills and Training Center, Inc. • Attendance Audit Trail & Gate Logs
           </p>
         </div>
 

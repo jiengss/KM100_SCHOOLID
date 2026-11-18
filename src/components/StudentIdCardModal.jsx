@@ -271,7 +271,7 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
                   </div>
                   <div className="min-w-0">
                     <span className="font-black text-[8.5px] tracking-wider uppercase text-white block leading-none truncate">
-                      KM100 TRAINING CENTER, INC.
+                      KM100 SKILLS AND TRAINING CENTER, INC.
                     </span>
                     <span className="text-[6.5px] font-bold tracking-widest text-amber-300 uppercase block leading-none mt-0.5 truncate">
                       {config.department}

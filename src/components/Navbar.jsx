@@ -69,7 +69,7 @@ export default function Navbar({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <h1 className="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight uppercase truncate">
-                  KM100 <span className="text-orange-500 dark:text-orange-400">Training Center</span>
+                  KM100 <span className="text-orange-500 dark:text-orange-400">Skills and Training Center, Inc.</span>
                 </h1>
                 <span
                   className={`hidden xs:inline-flex text-[9px] sm:text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full border shadow-sm flex-shrink-0 ${
