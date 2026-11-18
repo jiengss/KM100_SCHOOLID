@@ -122,7 +122,7 @@ export default function KioskDisplay({
           <div className="relative flex-shrink-0">
             <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-darkbg-950 p-1 border-2 border-orange-500/40 shadow-[0_0_20px_rgba(249,115,22,0.25)] flex items-center justify-center transition-transform active:scale-95">
               <img
-                src="/km100-logo.webp"
+                src="/km100-logo.png"
                 alt="KM100 Seal"
                 className="w-full h-full object-contain"
               />
@@ -249,7 +249,7 @@ export default function KioskDisplay({
             {/* Circular Feathered Logo Watermark */}
             <div className="w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] rounded-full overflow-hidden opacity-[0.06] filter grayscale contrast-125 [mask-image:radial-gradient(circle_at_center,black_40%,transparent_72%)] pointer-events-none">
               <img
-                src="/km100-logo.webp"
+                src="/km100-logo.png"
                 alt="KM100 Watermark"
                 className="w-full h-full object-cover rounded-full"
               />
@@ -432,7 +432,7 @@ export default function KioskDisplay({
                     {/* Centered Circular Seal */}
                     <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-white/5">
                       <img
-                        src="/km100-logo.webp"
+                        src="/km100-logo.png"
                         alt="KM100 Core"
                         className="w-full h-full object-contain rounded-full select-none"
                       />

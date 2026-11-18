@@ -264,7 +264,7 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
                 <div className="flex items-center gap-1.5 min-w-0">
                   <div className="w-5 h-5 rounded-full bg-white p-0.5 shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
                     <img
-                      src="/km100-logo.webp"
+                      src="/km100-logo.png"
                       alt="KM100 Logo"
                       className="w-full h-full object-contain rounded-full"
                     />

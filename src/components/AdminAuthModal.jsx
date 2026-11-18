@@ -116,7 +116,7 @@ export default function AdminAuthModal({
           <div className="flex flex-col items-center text-center mb-5 sm:mb-6">
             <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-darkbg-900 border border-orange-500/40 p-1.5 shadow-xl shadow-orange-500/20 mb-2.5 sm:mb-3 flex items-center justify-center">
               <img
-                src="/km100-logo.webp"
+                src="/km100-logo.png"
                 alt="KM100 Logo"
                 className="w-full h-full object-contain"
               />

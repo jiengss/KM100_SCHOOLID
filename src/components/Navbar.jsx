@@ -54,7 +54,7 @@ export default function Navbar({
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="relative flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-darkbg-950 border border-orange-500/30 p-1 shadow-[0_0_15px_rgba(249,115,22,0.15)] flex-shrink-0 transition-transform active:scale-95">
               <img
-                src="/km100-logo.webp"
+                src="/km100-logo.png"
                 alt="KM100 Logo"
                 className="w-full h-full object-contain"
               />

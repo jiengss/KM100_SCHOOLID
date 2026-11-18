@@ -124,7 +124,7 @@ export default function AdminDashboard({
         
         <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-darkbg-950 border border-orange-500/40 p-1 flex items-center justify-center shadow-lg shadow-orange-500/10 flex-shrink-0 transition-transform active:scale-95">
-            <img src="/km100-logo.webp" alt="KM100 Logo" className="w-full h-full object-contain" />
+            <img src="/km100-logo.png" alt="KM100 Logo" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
