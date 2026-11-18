@@ -4,7 +4,6 @@ import {
   X, 
   Printer, 
   ShieldCheck, 
-  Heart, 
   Cpu, 
   Zap, 
   Radio, 
@@ -213,18 +212,17 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
                   </div>
                 </div>
 
-                {/* Blood Type & Emergency Mini Pill */}
-                <div className="w-full bg-slate-100 border border-slate-200 rounded-lg p-1.5 text-center mt-1.5 shadow-inner">
-                  <div className="flex items-center justify-center gap-1 text-[8.5px] font-black text-slate-700 leading-none">
-                    <Heart className="w-2.5 h-2.5 text-rose-500 fill-rose-500 flex-shrink-0" />
-                    <span>Blood: <strong className="text-slate-900">{student.blood_type || 'O+'}</strong></span>
-                  </div>
-                  {student.emergency_contact_phone && (
-                    <div className="text-[7.5px] text-slate-500 truncate mt-0.5 font-medium leading-none">
+                {/* Emergency Contact Mini Pill */}
+                {student.emergency_contact_phone && (
+                  <div className="w-full bg-slate-100 border border-slate-200 rounded-lg p-1.5 text-center mt-1.5 shadow-inner">
+                    <span className="text-[7px] font-extrabold text-slate-400 uppercase tracking-wider block leading-none">
+                      Emergency Contact
+                    </span>
+                    <div className="text-[8px] text-slate-700 truncate mt-1 font-bold leading-none">
                       {student.emergency_contact_phone}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* RIGHT COLUMN: Identity, Specialization & High-Res QR Code */}
