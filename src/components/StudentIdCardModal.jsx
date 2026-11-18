@@ -123,7 +123,102 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
   const CourseIcon = config.Icon;
 
   const handlePrint = () => {
-    window.print();
+    const cardElement = document.getElementById('printable-id-card');
+    if (!cardElement) {
+      window.print();
+      return;
+    }
+
+    try {
+      // Collect all compiled stylesheets and Tailwind rules from main document
+      const headStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+        .map(el => el.outerHTML)
+        .join('\n');
+
+      // Create a clean, isolated printing iframe (avoids modal transform/fixed clipping)
+      let iframe = document.getElementById('km100-print-frame');
+      if (iframe) {
+        iframe.remove();
+      }
+
+      iframe = document.createElement('iframe');
+      iframe.id = 'km100-print-frame';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>KM100 School ID - ${student.school_id}</title>
+            ${headStyles}
+            <style>
+              @page {
+                size: 3in 2in;
+                margin: 0;
+              }
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                box-sizing: border-box !important;
+              }
+              html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 3in !important;
+                height: 2in !important;
+                background: white !important;
+                overflow: hidden !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+              }
+              .print-isolated-card {
+                width: 3in !important;
+                height: 2in !important;
+                max-width: 3in !important;
+                max-height: 2in !important;
+                min-width: 3in !important;
+                min-height: 2in !important;
+                overflow: hidden !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border-radius: 6px;
+                border: 1px solid #cbd5e1;
+                box-sizing: border-box !important;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-isolated-card bg-white text-slate-900 relative flex flex-col justify-between select-none">
+              ${cardElement.innerHTML}
+            </div>
+          </body>
+        </html>
+      `);
+      doc.close();
+
+      setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(() => {
+          if (iframe && iframe.parentNode) {
+            iframe.parentNode.removeChild(iframe);
+          }
+        }, 3000);
+      }, 350);
+    } catch (err) {
+      console.error("Print iframe fallback:", err);
+      window.print();
+    }
   };
 
   return (

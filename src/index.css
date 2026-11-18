@@ -62,38 +62,7 @@
     size: 3in 2in;
     margin: 0;
   }
-  html, body {
-    width: 3in !important;
-    height: 2in !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    overflow: hidden !important;
-  }
-  body * {
-    visibility: hidden;
-  }
-  #printable-id-card, #printable-id-card * {
-    visibility: visible;
-  }
-  #printable-id-card {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 3in !important;
-    height: 2in !important;
-    max-width: 3in !important;
-    max-height: 2in !important;
-    min-width: 3in !important;
-    min-height: 2in !important;
-    box-sizing: border-box !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transform: none !important;
-    overflow: hidden !important;
+  * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
