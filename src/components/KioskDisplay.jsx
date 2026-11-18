@@ -458,7 +458,7 @@ export default function KioskDisplay({
                 TAP OR SCAN YOUR <span className="bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500 bg-clip-text text-transparent">SCHOOL ID</span>
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 mt-2.5 max-w-md font-medium leading-relaxed drop-shadow-sm">
-                Present your official <span className="text-orange-300 font-bold">2" × 3" QR Badge</span> or tap your <span className="text-blue-300 font-bold">RFID Card</span> in front of the scanner reader to log campus attendance.
+                Present your official <span className="text-orange-300 font-bold">3" × 2" QR Badge</span> or tap your <span className="text-blue-300 font-bold">RFID Card</span> in front of the scanner reader to log campus attendance.
               </p>
 
               {/* Plug & Play Hardware Indicator */}
@@ -539,7 +539,7 @@ export default function KioskDisplay({
               {logs.length === 0 ? (
                 <div className="h-48 flex flex-col items-center justify-center text-slate-500 text-xs text-center p-4">
                   <Scan className="w-8 h-8 mb-2 opacity-40 text-orange-400" />
-                  <span>No students scanned at the gate yet. Tap a 2x3 badge to begin!</span>
+                  <span>No students scanned at the gate yet. Tap a 3x2" badge to begin!</span>
                 </div>
               ) : (
                 logs.slice(0, 15).map((log) => {

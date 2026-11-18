@@ -56,15 +56,15 @@
   background: rgba(249, 115, 22, 0.6);
 }
 
-/* Print Styles for 2x3 inches School ID Badges */
+/* Print Styles for 3x2 inches (Landscape) School ID Badges */
 @media print {
   @page {
-    size: 2in 3in;
+    size: 3in 2in;
     margin: 0;
   }
   html, body {
-    width: 2in;
-    height: 3in;
+    width: 3in;
+    height: 2in;
     margin: 0 !important;
     padding: 0 !important;
     background: white !important;
@@ -79,10 +79,10 @@
     position: fixed;
     left: 0;
     top: 0;
-    width: 2in !important;
-    height: 3in !important;
-    max-width: 2in !important;
-    max-height: 3in !important;
+    width: 3in !important;
+    height: 2in !important;
+    max-width: 3in !important;
+    max-height: 2in !important;
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
