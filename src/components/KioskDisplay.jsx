@@ -240,13 +240,20 @@ export default function KioskDisplay({
         {/* LEFT / CENTER: PRIMARY MAIN GATE SCANNER SCREEN              */}
         {/* ============================================================ */}
         <div className="flex-1 min-h-[500px] glass-panel-glow rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-tech-grid">
-          {/* KM100 WATERMARK BACKGROUND WITH BREATHING GLOW */}
+          {/* AMBIENT HOLOGRAPHIC KM100 WATERMARK (CIRCULAR FEATHERED, NO SQUARE CORNERS) */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none z-0">
-            <img
-              src="/km100-logo.webp"
-              alt="KM100 Skills & Training Center Logo"
-              className="w-80 sm:w-[480px] h-80 sm:h-[480px] object-contain opacity-[0.16] filter contrast-125 brightness-110 drop-shadow-[0_0_80px_rgba(249,115,22,0.35)] animate-glow-pulse pointer-events-none"
-            />
+            {/* Concentric Ambient Rings */}
+            <div className="absolute w-[440px] sm:w-[560px] h-[440px] sm:h-[560px] rounded-full border border-orange-500/10 pointer-events-none animate-[spin_80s_linear_infinite]" />
+            <div className="absolute w-[320px] sm:w-[400px] h-[320px] sm:h-[400px] rounded-full border border-dashed border-amber-500/15 pointer-events-none animate-[spin_50s_linear_infinite_reverse]" />
+            
+            {/* Circular Feathered Logo Watermark */}
+            <div className="w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] rounded-full overflow-hidden opacity-[0.06] filter grayscale contrast-125 [mask-image:radial-gradient(circle_at_center,black_40%,transparent_72%)] pointer-events-none">
+              <img
+                src="/km100-logo.webp"
+                alt="KM100 Watermark"
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
           </div>
 
           {/* Soft ambient lighting radial highlights */}
@@ -399,47 +406,65 @@ export default function KioskDisplay({
             /* ======================================================== */
             /* STATE C: IDLE MAIN GATE SCANNER RADAR                    */
             /* ======================================================== */
-            <div className="flex flex-col items-center text-center max-w-lg relative z-10">
-              {/* Futuristic Holographic Target with Logo Core & Laser Scan Line */}
+            <div className="flex flex-col items-center text-center max-w-lg relative z-10 py-2">
+              {/* Prestigious School Badge Header */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-darkbg-950/90 border border-orange-500/30 text-orange-400 text-[11px] font-black uppercase tracking-wider mb-5 shadow-sm">
+                <Building2 className="w-3.5 h-3.5 text-orange-400" />
+                <span>KM100 Skills & Training Center, Inc.</span>
+              </div>
+
+              {/* High-Tech Optical Scanner Viewport */}
               <div className="relative mb-6">
-                {/* Glowing Radar Concentric Rings */}
-                <div className="absolute -inset-4 rounded-full border border-orange-500/20 animate-ping opacity-40 pointer-events-none" />
-                <div className="absolute -inset-8 rounded-full border border-blue-500/10 pointer-events-none" />
+                {/* Luminous Pulsing Radar Rings */}
+                <div className="absolute -inset-4 rounded-3xl border border-orange-500/20 animate-ping opacity-30 pointer-events-none" />
+                <div className="absolute -inset-2 rounded-3xl border border-dashed border-amber-500/20 pointer-events-none animate-[spin_30s_linear_infinite]" />
 
-                <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-tr from-darkbg-950 via-darkbg-900 to-darkbg-950 border-2 border-orange-500/50 flex items-center justify-center text-orange-400 shadow-[0_0_60px_rgba(249,115,22,0.35)] relative overflow-hidden group">
-                  {/* Sweep Line */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/20 to-transparent animate-scan pointer-events-none" />
+                {/* Scanner Housing */}
+                <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-3xl bg-gradient-to-b from-darkbg-900 via-darkbg-950 to-darkbg-950 border-2 border-orange-500/50 p-4 shadow-[0_0_50px_rgba(249,115,22,0.25)] flex items-center justify-center relative overflow-hidden group">
+                  {/* Cyber Corner Reticles */}
+                  <div className="absolute top-2.5 left-2.5 w-4 h-4 border-t-2 border-l-2 border-orange-400 rounded-tl-sm pointer-events-none" />
+                  <div className="absolute top-2.5 right-2.5 w-4 h-4 border-t-2 border-r-2 border-orange-400 rounded-tr-sm pointer-events-none" />
+                  <div className="absolute bottom-2.5 left-2.5 w-4 h-4 border-b-2 border-l-2 border-orange-400 rounded-bl-sm pointer-events-none" />
+                  <div className="absolute bottom-2.5 right-2.5 w-4 h-4 border-b-2 border-r-2 border-orange-400 rounded-br-sm pointer-events-none" />
 
-                  {/* Core KM100 Emblem */}
-                  <img
-                    src="/km100-logo.webp"
-                    alt="KM100 Core"
-                    className="w-20 h-20 sm:w-26 sm:h-26 object-contain opacity-35 absolute pointer-events-none"
-                  />
+                  {/* Circular Scanner Target with KM100 Seal */}
+                  <div className="relative w-28 h-28 sm:w-34 sm:h-34 rounded-full bg-darkbg-950 border border-orange-500/40 p-2 shadow-inner flex items-center justify-center overflow-hidden">
+                    {/* Centered Circular Seal */}
+                    <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-white/5">
+                      <img
+                        src="/km100-logo.webp"
+                        alt="KM100 Core"
+                        className="w-full h-full object-contain rounded-full select-none"
+                      />
+                    </div>
 
-                  {/* Hologram Scanner Brackets */}
-                  <Scan className="w-16 h-16 sm:w-20 sm:h-20 text-orange-400 animate-pulse relative z-10 drop-shadow-[0_0_12px_rgba(249,115,22,0.8)]" />
+                    {/* Animated Hologram Corner Reticle */}
+                    <Scan className="w-16 h-16 text-orange-400/70 absolute z-10 pointer-events-none animate-pulse" />
+
+                    {/* Laser Beam Sweep Line */}
+                    <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-300 to-transparent shadow-[0_0_12px_#f59e0b] animate-scan pointer-events-none z-20" />
+                  </div>
                 </div>
 
                 {/* Gate Online Badge */}
-                <div className="absolute -bottom-2 right-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-[10px] font-black uppercase px-3 py-0.5 rounded-full border-2 border-darkbg-950 flex items-center gap-1.5 shadow-lg z-20">
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-[10px] font-black uppercase px-3.5 py-1 rounded-full border-2 border-darkbg-950 flex items-center gap-1.5 shadow-xl z-20 whitespace-nowrap">
                   <Activity className="w-3 h-3 animate-spin" />
-                  <span>GATE ONLINE</span>
+                  <span>GATE 1 • SCANNER READY</span>
                 </div>
               </div>
 
               {/* High-Impact Headline */}
-              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight uppercase leading-snug">
-                TAP OR SCAN YOUR SCHOOL ID
+              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight uppercase leading-snug drop-shadow-md">
+                TAP OR SCAN YOUR <span className="bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500 bg-clip-text text-transparent">SCHOOL ID</span>
               </h2>
-              <p className="text-sm text-slate-300 mt-2 max-w-md font-medium">
-                Present your official <strong>2" × 3" QR Badge</strong> or RFID Card in front of the scanner reader to log campus gate admission.
+              <p className="text-xs sm:text-sm text-slate-300 mt-2.5 max-w-md font-medium leading-relaxed drop-shadow-sm">
+                Present your official <span className="text-orange-300 font-bold">2" × 3" QR Badge</span> or tap your <span className="text-blue-300 font-bold">RFID Card</span> in front of the scanner reader to log campus attendance.
               </p>
 
               {/* Plug & Play Hardware Indicator */}
-              <div className="mt-4 px-4 py-1.5 rounded-full bg-darkbg-950/90 border border-slate-800 text-[11px] font-semibold text-slate-300 flex items-center gap-2 shadow-inner">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>Handheld Laser / 2D QR Scanner Ready (Plug & Play)</span>
+              <div className="mt-4 px-4 py-1.5 rounded-full bg-darkbg-950/90 border border-slate-800 text-[11px] font-bold text-slate-300 flex items-center gap-2 shadow-inner">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Handheld Laser Barcode & 2D QR Scanner Active (Plug & Play)</span>
               </div>
 
               {/* Action Buttons */}
