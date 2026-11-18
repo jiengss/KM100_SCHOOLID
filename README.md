@@ -1,4 +1,5 @@
 # 🎓 KM100 School ID Scanner & Attendance Kiosk System
+**KM100 Skills and Training Center, Inc.**
 
 A real-time School ID verification and attendance tracking kiosk system built with **React.js** (Vite + Tailwind CSS) and **Supabase PostgreSQL**.
 
