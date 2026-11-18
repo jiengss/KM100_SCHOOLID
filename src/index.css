@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #070a10;
+    color: #f1f5f9;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.08) 0%, transparent 60%),
+      radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+      linear-gradient(to bottom, #070a10 0%, #0a0e17 100%);
+    background-attachment: fixed;
+  }
+}
+
+/* Futuristic Tech Grid Pattern */
+.bg-tech-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(13, 19, 31, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-glow {
+  background: rgba(13, 19, 31, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  box-shadow: 0 0 50px -10px rgba(249, 115, 22, 0.15);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(13, 19, 31, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(249, 115, 22, 0.35);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.6);
+}
+
+/* Print Styles for 2x3 inches School ID Badges */
+@media print {
+  @page {
+    size: 2in 3in;
+    margin: 0;
+  }
+  html, body {
+    width: 2in;
+    height: 3in;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #printable-id-card, #printable-id-card * {
+    visibility: visible;
+  }
+  #printable-id-card {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 2in !important;
+    height: 3in !important;
+    max-width: 2in !important;
+    max-height: 3in !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

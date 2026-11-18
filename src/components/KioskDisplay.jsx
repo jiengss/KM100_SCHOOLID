@@ -1,0 +1,569 @@
+import React, { useState, useEffect } from 'react';
+import confetti from 'canvas-confetti';
+import { 
+  Scan, 
+  Camera, 
+  Keyboard, 
+  CheckCircle2, 
+  LogOut, 
+  LogIn, 
+  Clock, 
+  AlertCircle, 
+  Sparkles, 
+  ShieldCheck, 
+  PhoneCall, 
+  ArrowRight,
+  UserCheck,
+  RefreshCw,
+  Radio,
+  Volume2,
+  Maximize2,
+  Minimize2,
+  Building2,
+  DoorOpen,
+  Award,
+  Calendar,
+  Layers,
+  ChevronDown,
+  Activity
+} from 'lucide-react';
+import { playSuccessChime, playDepartureChime, playAlertBuzzer, speakGreeting } from '../lib/audioEffects';
+
+export default function KioskDisplay({
+  students,
+  logs,
+  onScanId,
+  scanMode,
+  setScanMode,
+  onOpenCamera,
+  onOpenManual,
+  soundEnabled,
+  lastScanResult,
+  onResetScanResult,
+  isFullscreen,
+  onToggleFullscreen
+}) {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [countdown, setCountdown] = useState(5);
+  const [selectedGate, setSelectedGate] = useState('Main Gate - Entrance Turnstile');
+
+  // Live Clock
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Auto-dismiss countdown
+  useEffect(() => {
+    if (!lastScanResult) return;
+
+    setCountdown(5);
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          onResetScanResult();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastScanResult, onResetScanResult]);
+
+  // Audio & celebration
+  useEffect(() => {
+    if (!lastScanResult) return;
+
+    if (lastScanResult.success && lastScanResult.student) {
+      if (lastScanResult.logType === 'IN') {
+        if (soundEnabled) {
+          playSuccessChime();
+          speakGreeting(`Welcome to school, ${lastScanResult.student.first_name}!`);
+        }
+        try {
+          confetti({
+            particleCount: 65,
+            spread: 70,
+            origin: { y: 0.58 }
+          });
+        } catch (e) {}
+      } else {
+        if (soundEnabled) {
+          playDepartureChime();
+          speakGreeting(`Goodbye, ${lastScanResult.student.first_name}. Have a safe trip home!`);
+        }
+      }
+    } else if (lastScanResult.error) {
+      if (soundEnabled) {
+        playAlertBuzzer();
+        speakGreeting('Unrecognized ID. Please check with the gate guard.');
+      }
+    }
+  }, [lastScanResult, soundEnabled]);
+
+  // Attendance stats
+  const totalInToday = logs.filter(l => l.log_type === 'IN').length;
+  const totalOutToday = logs.filter(l => l.log_type === 'OUT').length;
+  const insideCampusNow = Math.max(0, totalInToday - totalOutToday);
+
+  return (
+    <div className={`flex-1 flex flex-col gap-5 p-3 sm:p-6 w-full ${isFullscreen ? 'max-w-none bg-darkbg-950 min-h-screen justify-between' : 'max-w-7xl mx-auto'}`}>
+      {/* ============================================================== */}
+      {/* TOP GATE HEADER & LIVE STATUS BAR                              */}
+      {/* ============================================================== */}
+      <div className="glass-panel-glow rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 relative overflow-hidden">
+        {/* Ambient Top Glow Line */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-80" />
+
+        {/* Institution Brand & Gate Station */}
+        <div className="flex items-center gap-3.5">
+          <div className="relative flex-shrink-0">
+            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-darkbg-950 p-1 border-2 border-orange-500/40 shadow-[0_0_20px_rgba(249,115,22,0.25)] flex items-center justify-center">
+              <img
+                src="/km100-logo.webp"
+                alt="KM100 Seal"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-darkbg-950 animate-pulse" />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base sm:text-xl font-extrabold text-white tracking-tight uppercase">
+                KM100 Skills & Training Center
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                GATE ONLINE
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">Station:</span>
+              <div className="relative inline-block">
+                <select
+                  value={selectedGate}
+                  onChange={(e) => setSelectedGate(e.target.value)}
+                  className="appearance-none bg-darkbg-950/80 border border-slate-700/80 hover:border-orange-500/50 text-orange-300 text-xs rounded-xl pl-3 pr-7 py-1 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer shadow-inner transition"
+                >
+                  <option value="Main Gate - Entrance Turnstile">Main Gate - Entrance Turnstile</option>
+                  <option value="Main Gate - Pedestrian Lane">Main Gate - Pedestrian Lane</option>
+                  <option value="Gate 2 - Senior High Entrance">Gate 2 - Senior High Entrance</option>
+                  <option value="Campus Exit Gate">Campus Exit Gate</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Clock, Mode Switcher & Gate TV Mode */}
+        <div className="flex items-center gap-3 ml-auto flex-wrap">
+          {/* Live High-Contrast Clock */}
+          <div className="flex items-center gap-2.5 bg-darkbg-950/90 px-4 py-2 rounded-2xl border border-slate-800 shadow-inner">
+            <Clock className="w-4 h-4 text-orange-400 animate-pulse" />
+            <div className="text-right">
+              <div className="text-base sm:text-xl font-black font-mono-id tracking-tight text-white leading-none">
+                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </div>
+              <div className="text-[10px] text-slate-400 font-semibold mt-0.5 uppercase tracking-wider">
+                {currentTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              </div>
+            </div>
+          </div>
+
+          {/* Mode Selector */}
+          <div className="flex items-center gap-1 bg-darkbg-950 p-1.5 rounded-2xl border border-slate-800 shadow-inner">
+            <button
+              onClick={() => setScanMode('IN')}
+              title="Lock to Entrance Time-In"
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 ${
+                scanMode === 'IN'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/25 ring-1 ring-emerald-400/40'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Time In (Entry)</span>
+            </button>
+            <button
+              onClick={() => setScanMode('OUT')}
+              title="Lock to Exit Time-Out"
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 ${
+                scanMode === 'OUT'
+                  ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-500/25 ring-1 ring-orange-400/40'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Time Out (Exit)</span>
+            </button>
+            <button
+              onClick={() => setScanMode('AUTO')}
+              title="Auto Toggle based on previous record"
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 ${
+                scanMode === 'AUTO'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Auto In/Out
+            </button>
+          </div>
+
+          {/* Gate Monitor TV Fullscreen Mode */}
+          <button
+            onClick={onToggleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen TV Monitor" : "Launch Fullscreen Gate TV Monitor"}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-darkbg-850 hover:bg-darkbg-800 text-white text-xs font-bold border border-slate-700/80 hover:border-orange-500/40 transition shadow-md group"
+          >
+            {isFullscreen ? (
+              <Minimize2 className="w-4 h-4 text-amber-400 group-hover:scale-110 transition" />
+            ) : (
+              <Maximize2 className="w-4 h-4 text-orange-400 group-hover:scale-110 transition" />
+            )}
+            <span className="hidden sm:inline font-mono">
+              {isFullscreen ? 'Exit TV Mode' : 'Gate TV Mode'}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* MAIN SCREEN BODY: Central Gate Kiosk + Headcount / Live Stream */}
+      {/* ============================================================== */}
+      <div className="flex-1 flex flex-col lg:flex-row gap-6">
+        {/* ============================================================ */}
+        {/* LEFT / CENTER: PRIMARY MAIN GATE SCANNER SCREEN              */}
+        {/* ============================================================ */}
+        <div className="flex-1 min-h-[500px] glass-panel-glow rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-tech-grid">
+          {/* KM100 WATERMARK BACKGROUND WITH BREATHING GLOW */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none z-0">
+            <img
+              src="/km100-logo.webp"
+              alt="KM100 Skills & Training Center Logo"
+              className="w-80 sm:w-[480px] h-80 sm:h-[480px] object-contain opacity-[0.16] filter contrast-125 brightness-110 drop-shadow-[0_0_80px_rgba(249,115,22,0.35)] animate-glow-pulse pointer-events-none"
+            />
+          </div>
+
+          {/* Soft ambient lighting radial highlights */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          {lastScanResult ? (
+            /* ======================================================== */
+            /* STATE A: ACTIVE TAP RESULT (VERIFIED STUDENT BADGE)      */
+            /* ======================================================== */
+            lastScanResult.success && lastScanResult.student ? (
+              <div className="w-full max-w-xl animate-scale-in flex flex-col items-center text-center relative z-10">
+                {/* Gate Verification Top Status Banner */}
+                <div
+                  className={`w-full py-3.5 px-5 rounded-2xl flex items-center justify-between mb-5 border-2 shadow-2xl backdrop-blur-xl ${
+                    lastScanResult.logType === 'IN'
+                      ? 'bg-emerald-950/85 border-emerald-400/60 text-emerald-200 shadow-emerald-950/40'
+                      : 'bg-orange-950/85 border-orange-400/60 text-orange-200 shadow-orange-950/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-2 rounded-xl text-slate-950 font-black shadow-md ${
+                        lastScanResult.logType === 'IN' ? 'bg-emerald-400' : 'bg-orange-400'
+                      }`}
+                    >
+                      {lastScanResult.logType === 'IN' ? (
+                        <LogIn className="w-6 h-6" />
+                      ) : (
+                        <LogOut className="w-6 h-6" />
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <span className="font-black text-sm uppercase tracking-wider block">
+                        {lastScanResult.logType === 'IN' ? 'CAMPUS ENTRY VERIFIED' : 'CAMPUS EXIT VERIFIED'}
+                      </span>
+                      <span className="text-[11px] text-slate-300 font-medium">
+                        {selectedGate}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="font-mono text-sm font-black bg-black/60 px-4 py-1.5 rounded-xl border border-white/10 text-white shadow-inner">
+                    {new Date(lastScanResult.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </span>
+                </div>
+
+                {/* Big Student Photo Frame */}
+                <div className="relative mb-3.5">
+                  <div
+                    className={`w-40 h-40 sm:w-48 sm:h-48 rounded-3xl p-1.5 border-4 shadow-2xl transition-all duration-300 ${
+                      lastScanResult.logType === 'IN'
+                        ? 'border-emerald-400 shadow-emerald-500/30'
+                        : 'border-orange-400 shadow-orange-500/30'
+                    }`}
+                  >
+                    <img
+                      src={lastScanResult.student.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400"}
+                      alt={lastScanResult.student.first_name}
+                      className="w-full h-full object-cover rounded-2xl bg-slate-900"
+                    />
+                  </div>
+                  <div
+                    className={`absolute -bottom-2 right-2 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-xl flex items-center gap-1.5 border-2 border-slate-950 ${
+                      lastScanResult.logType === 'IN'
+                        ? 'bg-emerald-400 text-slate-950'
+                        : 'bg-orange-400 text-slate-950'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{lastScanResult.logType === 'IN' ? 'Admitted' : 'Departed'}</span>
+                  </div>
+                </div>
+
+                {/* Student Full Name */}
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+                  {lastScanResult.student.first_name} {lastScanResult.student.middle_name ? lastScanResult.student.middle_name + ' ' : ''}{lastScanResult.student.last_name}
+                </h2>
+
+                {/* ID & Year Level Badge */}
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                  <span className="px-3.5 py-1 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30 text-xs font-extrabold font-mono shadow-sm">
+                    ID: {lastScanResult.student.school_id}
+                  </span>
+                  <span className="px-3.5 py-1 rounded-full bg-darkbg-850 text-slate-200 border border-slate-700 text-xs font-bold">
+                    {lastScanResult.student.grade_level} • {lastScanResult.student.section}
+                  </span>
+                </div>
+
+                {/* NC II Program Specialization */}
+                <div className="mt-2.5 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-orange-500/20 via-amber-500/15 to-orange-500/20 border border-orange-500/40 text-xs font-black text-orange-200 shadow-sm">
+                  <Award className="w-4 h-4 text-orange-400" />
+                  <span>{lastScanResult.student.course_strand || 'Technical Vocational (NC II)'}</span>
+                </div>
+
+                {/* Guardian / Emergency Contact */}
+                {lastScanResult.student.emergency_contact_phone && (
+                  <div className="mt-3.5 flex items-center gap-2 text-xs text-slate-300 bg-darkbg-950/80 px-4 py-2 rounded-xl border border-slate-800 shadow-inner">
+                    <PhoneCall className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
+                    <span>Emergency: <strong>{lastScanResult.student.emergency_contact_name}</strong> ({lastScanResult.student.emergency_contact_phone})</span>
+                  </div>
+                )}
+
+                {/* Auto Reset Countdown Bar */}
+                <div className="w-full mt-6 flex flex-col items-center gap-2">
+                  <div className="w-64 h-2 bg-darkbg-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                    <div
+                      className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-1000 ease-linear rounded-full shadow-[0_0_10px_#f97316]"
+                      style={{ width: `${(countdown / 5) * 100}%` }}
+                    />
+                  </div>
+                  <button
+                    onClick={onResetScanResult}
+                    className="text-xs text-slate-400 hover:text-white transition flex items-center gap-1.5 mt-0.5 font-bold"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-orange-400" />
+                    <span>Ready for Next Student ({countdown}s)</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* ======================================================== */
+              /* STATE B: UNREGISTERED / DENIED CARD                      */
+              /* ======================================================== */
+              <div className="w-full max-w-md animate-scale-in flex flex-col items-center text-center p-6 sm:p-8 bg-rose-950/60 border-2 border-rose-500/60 rounded-3xl relative z-10 shadow-[0_0_50px_rgba(244,63,94,0.3)] backdrop-blur-xl">
+                <div className="w-20 h-20 rounded-full bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center text-rose-400 mb-4 animate-bounce shadow-lg">
+                  <AlertCircle className="w-10 h-10" />
+                </div>
+                <h3 className="text-xl font-black text-rose-100 tracking-tight">Access Denied: Unrecognized ID</h3>
+                <p className="text-xs text-rose-300/80 mt-1 max-w-xs">
+                  This card code is not registered in the KM100 database.
+                </p>
+
+                <div className="mt-4 bg-darkbg-950/90 border border-rose-500/40 px-5 py-2.5 rounded-xl font-mono text-sm text-rose-300 font-bold shadow-inner">
+                  Scanned Code: {lastScanResult.code}
+                </div>
+
+                <p className="text-xs text-slate-400 mt-4">
+                  Please proceed to the Guard Station or Registrar's Office for visitor clearance.
+                </p>
+
+                <button
+                  onClick={onResetScanResult}
+                  className="mt-6 px-6 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white rounded-xl text-xs font-black transition shadow-lg shadow-rose-600/30"
+                >
+                  Dismiss & Ready for Next
+                </button>
+              </div>
+            )
+          ) : (
+            /* ======================================================== */
+            /* STATE C: IDLE MAIN GATE SCANNER RADAR                    */
+            /* ======================================================== */
+            <div className="flex flex-col items-center text-center max-w-lg relative z-10">
+              {/* Futuristic Holographic Target with Logo Core & Laser Scan Line */}
+              <div className="relative mb-6">
+                {/* Glowing Radar Concentric Rings */}
+                <div className="absolute -inset-4 rounded-full border border-orange-500/20 animate-ping opacity-40 pointer-events-none" />
+                <div className="absolute -inset-8 rounded-full border border-blue-500/10 pointer-events-none" />
+
+                <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-tr from-darkbg-950 via-darkbg-900 to-darkbg-950 border-2 border-orange-500/50 flex items-center justify-center text-orange-400 shadow-[0_0_60px_rgba(249,115,22,0.35)] relative overflow-hidden group">
+                  {/* Sweep Line */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/20 to-transparent animate-scan pointer-events-none" />
+
+                  {/* Core KM100 Emblem */}
+                  <img
+                    src="/km100-logo.webp"
+                    alt="KM100 Core"
+                    className="w-20 h-20 sm:w-26 sm:h-26 object-contain opacity-35 absolute pointer-events-none"
+                  />
+
+                  {/* Hologram Scanner Brackets */}
+                  <Scan className="w-16 h-16 sm:w-20 sm:h-20 text-orange-400 animate-pulse relative z-10 drop-shadow-[0_0_12px_rgba(249,115,22,0.8)]" />
+                </div>
+
+                {/* Gate Online Badge */}
+                <div className="absolute -bottom-2 right-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 text-[10px] font-black uppercase px-3 py-0.5 rounded-full border-2 border-darkbg-950 flex items-center gap-1.5 shadow-lg z-20">
+                  <Activity className="w-3 h-3 animate-spin" />
+                  <span>GATE ONLINE</span>
+                </div>
+              </div>
+
+              {/* High-Impact Headline */}
+              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight uppercase leading-snug">
+                TAP OR SCAN YOUR SCHOOL ID
+              </h2>
+              <p className="text-sm text-slate-300 mt-2 max-w-md font-medium">
+                Present your official <strong>2" × 3" QR Badge</strong> or RFID Card in front of the scanner reader to log campus gate admission.
+              </p>
+
+              {/* Plug & Play Hardware Indicator */}
+              <div className="mt-4 px-4 py-1.5 rounded-full bg-darkbg-950/90 border border-slate-800 text-[11px] font-semibold text-slate-300 flex items-center gap-2 shadow-inner">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span>Handheld Laser / 2D QR Scanner Ready (Plug & Play)</span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3 w-full">
+                <button
+                  onClick={onOpenCamera}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black transition-all shadow-lg shadow-blue-500/25 hover:scale-[1.02]"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Open Camera Scanner</span>
+                </button>
+
+                <button
+                  onClick={onOpenManual}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-darkbg-850 hover:bg-darkbg-800 text-slate-200 text-xs font-bold border border-slate-700/80 transition shadow-sm hover:scale-[1.02]"
+                >
+                  <Keyboard className="w-4 h-4" />
+                  <span>Enter ID Manually</span>
+                </button>
+
+                {soundEnabled && (
+                  <button
+                    onClick={() => {
+                      playSuccessChime();
+                      speakGreeting('Main gate audio verified.');
+                    }}
+                    title="Play audio test chime and greeting"
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-darkbg-950/90 hover:bg-orange-950/30 text-orange-400 hover:text-orange-300 border border-slate-800 hover:border-orange-500/40 text-xs font-bold transition shadow-sm"
+                  >
+                    <Volume2 className="w-4 h-4" />
+                    <span>Test Gate Audio</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ============================================================ */}
+        {/* RIGHT PANEL: CAMPUS HEADCOUNT METRICS & RECENT GATE ENTRIES  */}
+        {/* ============================================================ */}
+        <div className="w-full lg:w-96 flex flex-col gap-4">
+          {/* 3 Metric Cards */}
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="glass-panel rounded-2xl p-3 text-center border-t-2 border-t-blue-500 shadow-lg">
+              <span className="text-[10px] uppercase font-extrabold text-slate-400 block truncate">Inside Campus</span>
+              <span className="text-xl sm:text-2xl font-black text-blue-400 font-mono-id leading-tight">{insideCampusNow}</span>
+            </div>
+            <div className="glass-panel rounded-2xl p-3 text-center border-t-2 border-t-emerald-500 shadow-lg">
+              <span className="text-[10px] uppercase font-extrabold text-slate-400 block truncate">Gate In</span>
+              <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono-id leading-tight">{totalInToday}</span>
+            </div>
+            <div className="glass-panel rounded-2xl p-3 text-center border-t-2 border-t-orange-500 shadow-lg">
+              <span className="text-[10px] uppercase font-extrabold text-slate-400 block truncate">Gate Out</span>
+              <span className="text-xl sm:text-2xl font-black text-orange-400 font-mono-id leading-tight">{totalOutToday}</span>
+            </div>
+          </div>
+
+          {/* Recent Gate Entries Stream */}
+          <div className="flex-1 glass-panel rounded-3xl p-4 sm:p-5 flex flex-col min-h-[380px] shadow-2xl relative overflow-hidden">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-800">
+              <div className="flex items-center gap-2 text-sm font-black text-white uppercase tracking-wider">
+                <DoorOpen className="w-4 h-4 text-orange-400" />
+                <span>Recent Gate Entries</span>
+              </div>
+              <span className="text-[11px] text-orange-300 font-mono font-bold bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20">
+                {logs.length} logged
+              </span>
+            </div>
+
+            <div className="flex-1 overflow-y-auto mt-3 space-y-2.5 pr-1 max-h-[460px]">
+              {logs.length === 0 ? (
+                <div className="h-48 flex flex-col items-center justify-center text-slate-500 text-xs text-center p-4">
+                  <Scan className="w-8 h-8 mb-2 opacity-40 text-orange-400" />
+                  <span>No students scanned at the gate yet. Tap a 2x3 badge to begin!</span>
+                </div>
+              ) : (
+                logs.slice(0, 15).map((log) => {
+                  const student = log.student || students.find(s => s.id === log.student_id || s.school_id === log.school_id);
+                  return (
+                    <div
+                      key={log.id}
+                      className="p-2.5 rounded-2xl bg-darkbg-950/70 border border-slate-800 hover:border-orange-500/40 flex items-center justify-between gap-3 transition-all duration-200 group hover:bg-darkbg-900/80 shadow-sm"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative flex-shrink-0">
+                          <img
+                            src={student?.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
+                            alt={student?.first_name || 'Student'}
+                            className="w-10 h-10 rounded-xl object-cover border border-slate-700 group-hover:border-orange-400/60 transition"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-white truncate group-hover:text-orange-300 transition">
+                            {student ? `${student.first_name} ${student.last_name}` : `ID: ${log.school_id}`}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-mono truncate">
+                            {student?.course_strand ? student.course_strand.replace(' Technology (NC II)', ' Tech') : log.school_id}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end flex-shrink-0">
+                        <span
+                          className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                            log.log_type === 'IN'
+                              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                              : 'bg-orange-500/15 text-orange-300 border border-orange-500/30'
+                          }`}
+                        >
+                          {log.log_type === 'IN' ? 'TIME IN' : 'TIME OUT'}
+                        </span>
+                        <span className="text-[10px] font-mono font-medium text-slate-400 mt-0.5">
+                          {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
