@@ -223,11 +223,11 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in touch-scroll">
-      <div className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[92vh] animate-scale-in">
+      <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[92vh] animate-scale-in">
         {/* Modal Top Bar */}
-        <div className="no-print flex items-center justify-between px-3.5 sm:px-6 py-3 sm:py-4 border-b border-slate-800 bg-slate-950/70 gap-2">
-          <div className="flex items-center gap-2 text-white font-bold min-w-0">
-            <CourseIcon className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 flex-shrink-0" />
+        <div className="no-print flex items-center justify-between px-3.5 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70 gap-2">
+          <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold min-w-0">
+            <CourseIcon className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0" />
             <span className="text-xs sm:text-sm font-bold truncate">School ID Card (3" × 2" Badge)</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
@@ -240,7 +240,7 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition active:scale-95"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95"
             >
               <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
@@ -248,7 +248,7 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
         </div>
 
         {/* Card Viewport Container */}
-        <div className="p-3 xs:p-6 sm:p-12 overflow-x-hidden overflow-y-auto flex flex-col items-center justify-center bg-slate-950/60 min-h-[260px] sm:min-h-[340px]">
+        <div className="p-3 xs:p-6 sm:p-12 overflow-x-hidden overflow-y-auto flex flex-col items-center justify-center bg-slate-100/90 dark:bg-slate-950/60 min-h-[260px] sm:min-h-[340px]">
           {/* Zoom Preview Wrapper (Adaptive on mobile, enlarged on desktop, 100% exact 3in x 2in in print) */}
           <div className="scale-[0.85] xs:scale-100 sm:scale-[1.25] md:scale-[1.35] origin-center shadow-2xl rounded-xl transition-all duration-300 my-1">
             {/* 
@@ -395,13 +395,13 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
         </div>
 
         {/* Modal Info Footer */}
-        <div className="no-print px-4 sm:px-6 py-2.5 sm:py-3 border-t border-slate-800 bg-slate-950/60 text-xs text-slate-400 flex flex-col xs:flex-row items-center justify-between gap-2 text-center xs:text-left">
-          <span className="text-slate-400 text-[10px] sm:text-[11px]">
+        <div className="no-print px-4 sm:px-6 py-2.5 sm:py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-xs text-slate-600 dark:text-slate-400 flex flex-col xs:flex-row items-center justify-between gap-2 text-center xs:text-left">
+          <span className="text-slate-600 dark:text-slate-400 text-[10px] sm:text-[11px]">
             Standard <strong>3" × 2" Landscape ID card</strong> — fits 100% on card printers & paper without cutting off.
           </span>
           <button
             onClick={handlePrint}
-            className="text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1 text-xs active:scale-95 transition"
+            className="text-orange-600 dark:text-orange-400 hover:text-orange-500 dark:hover:text-orange-300 font-bold flex items-center gap-1 text-xs active:scale-95 transition"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print Badge</span>

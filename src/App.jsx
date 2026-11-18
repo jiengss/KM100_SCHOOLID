@@ -23,6 +23,26 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(() => adminAuthService.getCurrentUser());
   const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
 
+  // Theme Mode: 'dark' (default for cyber kiosk) or 'light'
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('km100_theme');
+    return saved ? saved : 'dark';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('km100_theme', theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [scanMode, setScanMode] = useState('AUTO'); // 'AUTO', 'IN', 'OUT'
   
@@ -202,7 +222,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 selection:bg-orange-500 selection:text-white transition-colors duration-200">
       {/* Navigation Header (Hidden in Fullscreen Gate TV Display) */}
       {!isGateFullscreen && (
         <Navbar
@@ -216,6 +236,8 @@ export default function App() {
           currentUser={currentUser}
           onOpenAdminLogin={handleOpenAdminLogin}
           onLogout={handleLogout}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
         />
       )}
 
@@ -245,6 +267,7 @@ export default function App() {
                 onResetScanResult={() => setLastScanResult(null)}
                 isFullscreen={isGateFullscreen}
                 onToggleFullscreen={handleToggleFullscreen}
+                theme={theme}
               />
             )}
 
@@ -255,25 +278,25 @@ export default function App() {
               !currentUser ? (
                 /* Unauthenticated Admin Prompt */
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                  <div className="max-w-md w-full p-8 rounded-3xl bg-darkbg-950/90 border border-orange-500/30 text-center shadow-2xl backdrop-blur-xl animate-in zoom-in-95">
+                  <div className="max-w-md w-full p-8 rounded-3xl bg-white/95 dark:bg-darkbg-950/90 border border-slate-200 dark:border-orange-500/30 text-center shadow-2xl backdrop-blur-xl animate-scale-in">
                     <div className="relative w-16 h-16 mx-auto rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center mb-4">
                       <Shield className="w-8 h-8 text-orange-400" />
                       <Lock className="w-4 h-4 text-amber-400 absolute -bottom-1 -right-1" />
                     </div>
-                    <h3 className="text-xl font-black text-white uppercase tracking-tight">Admin Authentication Required</h3>
-                    <p className="text-xs text-slate-400 mt-2 mb-6">
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Admin Authentication Required</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 mb-6">
                       Access to the Dashboard, Attendance Records, and Student Registrations is restricted to authorized school personnel.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center gap-3">
                       <button
                         onClick={handleOpenAdminLogin}
-                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-extrabold text-xs shadow-lg shadow-orange-500/30 transition"
+                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-extrabold text-xs shadow-lg shadow-orange-500/30 transition active:scale-95"
                       >
                         Sign In / Register Admin
                       </button>
                       <button
                         onClick={() => setCurrentPortal('gate')}
-                        className="w-full py-3 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 font-bold text-xs transition"
+                        className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-300 font-bold text-xs transition active:scale-95 border border-slate-200 dark:border-slate-700"
                       >
                         Return to Gate
                       </button>
@@ -293,11 +316,12 @@ export default function App() {
                         setCurrentPortal('gate');
                         handleToggleFullscreen();
                       }}
+                      theme={theme}
                     />
                   )}
 
                   {adminTab === 'attendance' && (
-                    <AttendanceLogView logs={logs} students={students} />
+                    <AttendanceLogView logs={logs} students={students} theme={theme} />
                   )}
 
                   {adminTab === 'students' && (
@@ -307,6 +331,7 @@ export default function App() {
                       onUpdateStudent={handleUpdateStudent}
                       onDeleteStudent={handleDeleteStudent}
                       onOpenCardModal={handleOpenCardModal}
+                      theme={theme}
                     />
                   )}
                 </div>
@@ -318,23 +343,23 @@ export default function App() {
 
       {/* Real-time Gate Tap Toast for Admin when working in Admin portal */}
       {currentPortal === 'admin' && lastScanResult && lastScanResult.success && (
-        <div className="fixed bottom-14 right-6 z-50 flex items-center gap-3 bg-slate-900/95 border border-emerald-500/40 text-white px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-md">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+        <div className="fixed bottom-14 right-6 z-50 flex items-center gap-3 bg-white/95 dark:bg-slate-900/95 border border-emerald-500/40 text-slate-900 dark:text-white px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-md">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
             {lastScanResult.logType}
           </div>
           <div className="text-xs">
-            <p className="font-bold text-slate-100">{lastScanResult.student?.first_name} {lastScanResult.student?.last_name}</p>
-            <p className="text-slate-400 text-[10px]">Gate verified just now ({lastScanResult.student?.school_id})</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100">{lastScanResult.student?.first_name} {lastScanResult.student?.last_name}</p>
+            <p className="text-slate-500 dark:text-slate-400 text-[10px]">Gate verified just now ({lastScanResult.student?.school_id})</p>
           </div>
           <button
             onClick={() => setCurrentPortal('gate')}
-            className="ml-2 text-[11px] font-bold text-emerald-400 hover:text-emerald-300 underline"
+            className="ml-2 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
           >
             View Gate
           </button>
           <button
             onClick={() => setLastScanResult(null)}
-            className="text-slate-500 hover:text-slate-300 ml-1 text-xs"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 ml-1 text-xs"
           >
             ✕
           </button>
@@ -343,11 +368,11 @@ export default function App() {
 
       {/* Footer (Hidden in Fullscreen Gate TV Display) */}
       {!isGateFullscreen && (
-        <footer className="border-t border-slate-900 bg-slate-950/80 py-3 px-6 text-xs text-slate-500 no-print flex items-center justify-between">
+        <footer className="border-t border-slate-200 dark:border-slate-900 bg-white/80 dark:bg-slate-950/80 py-3 px-6 text-xs text-slate-500 dark:text-slate-400 no-print flex items-center justify-between transition-colors">
           <span>KM100 School ID Scanner & Attendance Verification System • Built with React & Supabase</span>
           <button
             onClick={() => setIsSupabaseModalOpen(true)}
-            className="text-slate-600 hover:text-slate-400 transition text-[11px]"
+            className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition text-[11px]"
           >
             Database Config
           </button>
