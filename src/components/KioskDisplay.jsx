@@ -109,7 +109,7 @@ export default function KioskDisplay({
   const insideCampusNow = Math.max(0, totalInToday - totalOutToday);
 
   return (
-    <div className={`flex-1 flex flex-col gap-5 p-3 sm:p-6 w-full ${isFullscreen ? 'max-w-none bg-darkbg-950 min-h-screen justify-between' : 'max-w-7xl mx-auto'}`}>
+    <div className={`flex-1 flex flex-col gap-5 p-3 sm:p-6 w-full ${isFullscreen ? 'max-w-none bg-slate-50 dark:bg-darkbg-950 min-h-screen justify-between' : 'max-w-7xl mx-auto'}`}>
       {/* ============================================================== */}
       {/* TOP GATE HEADER & LIVE STATUS BAR                              */}
       {/* ============================================================== */}
@@ -269,14 +269,14 @@ export default function KioskDisplay({
                 <div
                   className={`w-full py-2.5 sm:py-3.5 px-3.5 sm:px-5 rounded-2xl flex items-center justify-between mb-4 sm:mb-5 border-2 shadow-2xl backdrop-blur-xl ${
                     lastScanResult.logType === 'IN'
-                      ? 'bg-emerald-950/85 border-emerald-400/60 text-emerald-200 shadow-emerald-950/40'
-                      : 'bg-orange-950/85 border-orange-400/60 text-orange-200 shadow-orange-950/40'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/85 border-emerald-400/80 dark:border-emerald-400/60 text-emerald-900 dark:text-emerald-200 shadow-emerald-500/10 dark:shadow-emerald-950/40'
+                      : 'bg-orange-50 dark:bg-orange-950/85 border-orange-400/80 dark:border-orange-400/60 text-orange-900 dark:text-orange-200 shadow-orange-500/10 dark:shadow-orange-950/40'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                     <div
-                      className={`p-1.5 sm:p-2 rounded-xl text-slate-950 font-black shadow-md flex-shrink-0 ${
-                        lastScanResult.logType === 'IN' ? 'bg-emerald-400' : 'bg-orange-400'
+                      className={`p-1.5 sm:p-2 rounded-xl font-black shadow-md flex-shrink-0 ${
+                        lastScanResult.logType === 'IN' ? 'bg-emerald-600 text-white dark:bg-emerald-400 dark:text-slate-950' : 'bg-orange-600 text-white dark:bg-orange-400 dark:text-slate-950'
                       }`}
                     >
                       {lastScanResult.logType === 'IN' ? (
@@ -289,12 +289,12 @@ export default function KioskDisplay({
                       <span className="font-black text-xs sm:text-sm uppercase tracking-wider block truncate">
                         {lastScanResult.logType === 'IN' ? 'CAMPUS ENTRY VERIFIED' : 'CAMPUS EXIT VERIFIED'}
                       </span>
-                      <span className="text-[10px] sm:text-[11px] text-slate-300 font-medium truncate block">
+                      <span className="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate block">
                         {selectedGate}
                       </span>
                     </div>
                   </div>
-                  <span className="font-mono text-xs sm:text-sm font-black bg-black/60 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-xl border border-white/10 text-white shadow-inner flex-shrink-0 ml-2">
+                  <span className="font-mono text-xs sm:text-sm font-black bg-white dark:bg-black/60 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white shadow-inner flex-shrink-0 ml-2">
                     {new Date(lastScanResult.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </span>
                 </div>
@@ -304,21 +304,21 @@ export default function KioskDisplay({
                   <div
                     className={`w-32 h-32 xs:w-40 xs:h-40 sm:w-48 sm:h-48 rounded-3xl p-1.5 border-4 shadow-2xl transition-all duration-300 ${
                       lastScanResult.logType === 'IN'
-                        ? 'border-emerald-400 shadow-emerald-500/30'
-                        : 'border-orange-400 shadow-orange-500/30'
+                        ? 'border-emerald-500 dark:border-emerald-400 shadow-emerald-500/20 dark:shadow-emerald-500/30'
+                        : 'border-orange-500 dark:border-orange-400 shadow-orange-500/20 dark:shadow-orange-500/30'
                     }`}
                   >
                     <img
                       src={lastScanResult.student.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400"}
                       alt={lastScanResult.student.first_name}
-                      className="w-full h-full object-cover rounded-2xl bg-slate-900"
+                      className="w-full h-full object-cover rounded-2xl bg-slate-100 dark:bg-slate-900"
                     />
                   </div>
                   <div
-                    className={`absolute -bottom-2 right-1 xs:right-2 px-2.5 xs:px-3.5 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-xl flex items-center gap-1 sm:gap-1.5 border-2 border-slate-950 ${
+                    className={`absolute -bottom-2 right-1 xs:right-2 px-2.5 xs:px-3.5 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-xl flex items-center gap-1 sm:gap-1.5 border-2 border-white dark:border-slate-950 ${
                       lastScanResult.logType === 'IN'
-                        ? 'bg-emerald-400 text-slate-950'
-                        : 'bg-orange-400 text-slate-950'
+                        ? 'bg-emerald-600 text-white dark:bg-emerald-400 dark:text-slate-950'
+                        : 'bg-orange-600 text-white dark:bg-orange-400 dark:text-slate-950'
                     }`}
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -419,7 +419,7 @@ export default function KioskDisplay({
                 <div className="absolute -inset-1.5 sm:-inset-2 rounded-3xl border border-dashed border-amber-500/30 dark:border-amber-500/20 pointer-events-none animate-[spin_30s_linear_infinite]" />
 
                 {/* Scanner Housing - Fully adaptive across 320px to 4K displays */}
-                <div className="w-36 h-36 xs:w-44 xs:h-44 sm:w-52 sm:h-52 md:w-56 md:h-56 rounded-3xl bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-darkbg-900 dark:via-darkbg-950 dark:to-darkbg-950 border-2 border-orange-400 dark:border-orange-500/50 p-3 sm:p-4 shadow-[0_10px_35px_rgba(249,115,22,0.15)] dark:shadow-[0_0_50px_rgba(249,115,22,0.25)] flex items-center justify-center relative overflow-hidden group transition-transform duration-300">
+                <div className="w-36 h-36 xs:w-44 xs:h-44 sm:w-52 sm:h-52 md:w-56 md:h-56 rounded-3xl bg-gradient-to-b from-white via-slate-50 to-orange-50/20 dark:from-darkbg-900 dark:via-darkbg-950 dark:to-darkbg-950 border-2 border-orange-400 dark:border-orange-500/50 p-3 sm:p-4 shadow-[0_10px_35px_rgba(249,115,22,0.15)] dark:shadow-[0_0_50px_rgba(249,115,22,0.25)] flex items-center justify-center relative overflow-hidden group transition-transform duration-300">
                   {/* Cyber Corner Reticles */}
                   <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 sm:w-4 sm:h-4 border-t-2 border-l-2 border-orange-500 dark:border-orange-400 rounded-tl-sm pointer-events-none" />
                   <div className="absolute top-2.5 right-2.5 w-3.5 h-3.5 sm:w-4 sm:h-4 border-t-2 border-r-2 border-orange-500 dark:border-orange-400 rounded-tr-sm pointer-events-none" />
@@ -427,7 +427,7 @@ export default function KioskDisplay({
                   <div className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 sm:w-4 sm:h-4 border-b-2 border-r-2 border-orange-500 dark:border-orange-400 rounded-br-sm pointer-events-none" />
 
                   {/* Circular Scanner Target with KM100 Seal */}
-                  <div className="relative w-24 h-24 xs:w-28 xs:h-28 sm:w-34 sm:h-34 rounded-full bg-slate-100 dark:bg-darkbg-950 border border-orange-400 dark:border-orange-500/40 p-1.5 sm:p-2 shadow-inner flex items-center justify-center overflow-hidden">
+                  <div className="relative w-24 h-24 xs:w-28 xs:h-28 sm:w-34 sm:h-34 rounded-full bg-white dark:bg-darkbg-950 border-2 border-orange-300 dark:border-orange-500/40 p-1.5 sm:p-2 shadow-inner flex items-center justify-center overflow-hidden">
                     {/* Centered Circular Seal */}
                     <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-white dark:bg-white/5">
                       <img
