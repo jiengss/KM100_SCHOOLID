@@ -102,20 +102,20 @@ export default function CameraScannerModal({ isOpen, onClose, onScanSuccess }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in touch-scroll">
+      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-scale-in">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-800 bg-slate-950/50">
           <div className="flex items-center gap-2 text-white font-bold">
             <Camera className="w-5 h-5 text-blue-400" />
-            <span>Camera ID Scanner</span>
+            <span className="text-sm font-bold">Camera ID Scanner</span>
           </div>
           <button
             onClick={() => {
               stopScanner();
               onClose();
             }}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition active:scale-95"
           >
             <X className="w-5 h-5" />
           </button>
@@ -123,7 +123,7 @@ export default function CameraScannerModal({ isOpen, onClose, onScanSuccess }) {
 
         {/* Camera Selector */}
         {cameras.length > 1 && (
-          <div className="px-6 py-2.5 bg-slate-950/30 border-b border-slate-800 flex items-center gap-2">
+          <div className="px-4 sm:px-6 py-2.5 bg-slate-950/30 border-b border-slate-800 flex items-center gap-2">
             <label className="text-xs text-slate-400 font-medium">Camera:</label>
             <select
               value={selectedCamera}
@@ -140,28 +140,28 @@ export default function CameraScannerModal({ isOpen, onClose, onScanSuccess }) {
         )}
 
         {/* Viewport Area */}
-        <div className="p-6 flex flex-col items-center justify-center">
+        <div className="p-3 sm:p-6 flex flex-col items-center justify-center">
           {errorMessage ? (
             <div className="p-6 text-center text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl max-w-sm">
               <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-80" />
               <p className="text-sm font-semibold">{errorMessage}</p>
               <button
                 onClick={() => selectedCamera && startScanner(selectedCamera)}
-                className="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5"
+                className="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 active:scale-95 transition"
               >
                 <RefreshCw className="w-3.5 h-3.5" /> Retry Camera
               </button>
             </div>
           ) : (
-            <div className="relative w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center min-h-[300px]">
+            <div className="relative w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center min-h-[260px] sm:min-h-[300px]">
               <div id={readerElementId} className="w-full h-full"></div>
               {scanning && (
-                <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center">
-                  <div className="w-64 h-32 border-2 border-blue-500/60 rounded-xl relative shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                <div className="absolute inset-x-4 sm:inset-x-8 top-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center">
+                  <div className="w-48 sm:w-64 h-28 sm:h-32 border-2 border-blue-500/60 rounded-xl relative shadow-[0_0_20px_rgba(59,130,246,0.3)]">
                     {/* Laser scanning line */}
                     <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_8px_#38bdf8] animate-scan" />
                   </div>
-                  <span className="mt-3 text-xs font-medium text-slate-300 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700">
+                  <span className="mt-2.5 sm:mt-3 text-[11px] sm:text-xs font-medium text-slate-300 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700 text-center">
                     Align Barcode or QR Code within the box
                   </span>
                 </div>
@@ -171,8 +171,8 @@ export default function CameraScannerModal({ isOpen, onClose, onScanSuccess }) {
         </div>
 
         {/* Footer info */}
-        <div className="px-6 py-3 border-t border-slate-800 bg-slate-950/40 text-center">
-          <p className="text-xs text-slate-400">
+        <div className="px-4 sm:px-6 py-2.5 sm:py-3 border-t border-slate-800 bg-slate-950/40 text-center">
+          <p className="text-[11px] sm:text-xs text-slate-400">
             Tip: You can also use a physical handheld USB/Bluetooth barcode or RFID card scanner anytime!
           </p>
         </div>

@@ -45,39 +45,39 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-orange-500/20 bg-darkbg-950/95 backdrop-blur-xl shadow-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-17">
+    <header className="sticky top-0 z-40 border-b border-orange-500/20 bg-darkbg-950/95 backdrop-blur-xl shadow-xl transition-all">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-17 gap-2">
           {/* ======================================================== */}
           {/* BRAND & SECTOR BADGE                                     */}
           {/* ======================================================== */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-darkbg-950 border border-orange-500/30 p-1 shadow-[0_0_15px_rgba(249,115,22,0.15)] flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="relative flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-darkbg-950 border border-orange-500/30 p-1 shadow-[0_0_15px_rgba(249,115,22,0.15)] flex-shrink-0 transition-transform active:scale-95">
               <img
                 src="/km100-logo.webp"
                 alt="KM100 Logo"
                 className="w-full h-full object-contain"
               />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-darkbg-950 animate-ping" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-darkbg-950" />
+              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-400 rounded-full ring-2 ring-darkbg-950 animate-ping" />
+              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-400 rounded-full ring-2 ring-darkbg-950" />
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-extrabold text-white tracking-tight flex items-center gap-1.5 uppercase">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="text-xs sm:text-base font-extrabold text-white tracking-tight uppercase truncate">
                   KM100 <span className="text-orange-400">Training Center</span>
                 </h1>
                 <span
-                  className={`text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full border shadow-sm ${
+                  className={`hidden xs:inline-flex text-[9px] sm:text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full border shadow-sm flex-shrink-0 ${
                     currentPortal === 'admin'
                       ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
                       : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
                   }`}
                 >
-                  {currentPortal === 'admin' ? 'Admin Portal' : 'Main Gate Display'}
+                  {currentPortal === 'admin' ? 'Admin' : 'Gate'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-medium hidden sm:block">
+              <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium hidden md:block truncate">
                 {currentPortal === 'admin'
                   ? 'Administration & Academic Control Suite'
                   : 'Campus Access Control & Student Entry Verification'}
@@ -86,14 +86,14 @@ export default function Navbar({
           </div>
 
           {/* ======================================================== */}
-          {/* CENTER NAVIGATION: SEPARATED BY PORTAL                   */}
+          {/* CENTER NAVIGATION: DESKTOP ONLY (md+)                    */}
           {/* ======================================================== */}
           {currentPortal === 'admin' ? (
-            /* ADMIN SIDE NAVIGATION TABS */
-            <nav className="flex items-center gap-1 bg-darkbg-900/90 p-1 rounded-2xl border border-slate-800 shadow-inner">
+            /* ADMIN SIDE NAVIGATION TABS - Desktop (md+) */
+            <nav className="hidden md:flex items-center gap-1 bg-darkbg-900/90 p-1 rounded-2xl border border-slate-800 shadow-inner">
               <button
                 onClick={() => setAdminTab('dashboard')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs lg:text-sm font-extrabold transition-all duration-200 active:scale-95 ${
                   adminTab === 'dashboard'
                     ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-500/30 ring-1 ring-orange-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -105,33 +105,31 @@ export default function Navbar({
 
               <button
                 onClick={() => setAdminTab('attendance')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs lg:text-sm font-extrabold transition-all duration-200 active:scale-95 ${
                   adminTab === 'attendance'
                     ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-500/30 ring-1 ring-orange-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
                 <ClipboardList className="w-4 h-4 text-orange-300" />
-                <span className="hidden md:inline">Attendance Logs</span>
-                <span className="md:hidden">Logs</span>
+                <span>Attendance Logs</span>
               </button>
 
               <button
                 onClick={() => setAdminTab('students')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs lg:text-sm font-extrabold transition-all duration-200 active:scale-95 ${
                   adminTab === 'students'
                     ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-500/30 ring-1 ring-orange-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
                 <Users className="w-4 h-4 text-blue-300" />
-                <span className="hidden md:inline">Students Directory</span>
-                <span className="md:hidden">Students</span>
+                <span>Students Directory</span>
               </button>
             </nav>
           ) : (
             /* MAIN GATE PUBLIC SCREEN: PURE GATE ACTIVE INDICATOR */
-            <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-darkbg-900/80 border border-slate-800 shadow-inner">
+            <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-darkbg-900/80 border border-slate-800 shadow-inner">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
               <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
                 Turnstile Gate 1 • Campus Entrance Active
@@ -142,11 +140,11 @@ export default function Navbar({
           {/* ======================================================== */}
           {/* RIGHT ACTION CONTROLS & PORTAL SWITCH BUTTON             */}
           {/* ======================================================== */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
             {/* Audio Toggle */}
             <button
               onClick={handleToggleSound}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm active:scale-95 ${
                 soundEnabled
                   ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
                   : 'bg-darkbg-950 border-slate-700/80 text-slate-400 hover:text-slate-200 hover:bg-darkbg-850'
@@ -154,15 +152,15 @@ export default function Navbar({
               title={soundEnabled ? "Click to mute audio" : "Click to enable audio"}
             >
               {soundEnabled ? (
-                <Volume2 className="w-4 h-4 text-emerald-400" />
+                <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
               ) : (
-                <VolumeX className="w-4 h-4 text-slate-400" />
+                <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
               )}
               <span className="hidden sm:inline">
                 {soundEnabled ? 'Sound: ON' : 'Sound: OFF'}
               </span>
               <div
-                className={`w-2 h-2 rounded-full ${
+                className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
                   soundEnabled
                     ? 'bg-emerald-400 shadow-sm shadow-emerald-400 animate-pulse'
                     : 'bg-slate-600'
@@ -175,21 +173,21 @@ export default function Navbar({
               <>
                 <button
                   onClick={onToggleFullscreen}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 border border-orange-500/30 text-xs font-bold transition shadow-sm"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 border border-orange-500/30 text-xs font-bold transition shadow-sm active:scale-95"
                   title="Launch dedicated Fullscreen Gate Monitor on TV/display"
                 >
                   <Maximize2 className="w-3.5 h-3.5 text-orange-400" />
                   <span className="hidden sm:inline">Gate TV</span>
                 </button>
 
-                {/* SWITCH TO ADMIN SIDE BUTTON (Requires Admin Login if not authenticated) */}
+                {/* SWITCH TO ADMIN SIDE BUTTON */}
                 <button
                   onClick={handleAdminClick}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black transition-all shadow-lg shadow-blue-500/25 hover:scale-[1.02]"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black transition-all shadow-lg shadow-blue-500/25 active:scale-95 hover:scale-[1.02]"
                 >
                   <Shield className="w-3.5 h-3.5" />
-                  <span>Admin Side</span>
-                  <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
+                  <span className="hidden xs:inline">Admin</span> Side
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </>
             ) : (
@@ -213,7 +211,7 @@ export default function Navbar({
 
                 <button
                   onClick={onLogout}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/25 text-xs font-bold transition"
+                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/25 text-xs font-bold transition active:scale-95"
                   title="Sign Out from Admin Suite"
                 >
                   <LogOut className="w-3.5 h-3.5 text-red-400" />
@@ -222,16 +220,61 @@ export default function Navbar({
 
                 <button
                   onClick={() => setCurrentPortal('gate')}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black transition-all shadow-lg shadow-emerald-500/25 hover:scale-[1.02]"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black transition-all shadow-lg shadow-emerald-500/25 active:scale-95 hover:scale-[1.02]"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <DoorOpen className="w-3.5 h-3.5" />
-                  <span>Go to Gate</span>
+                  <span>Gate</span>
                 </button>
               </>
             )}
           </div>
         </div>
+
+        {/* ======================================================== */}
+        {/* MOBILE ADMIN SUB-NAVIGATION BAR (< md)                   */}
+        {/* ======================================================== */}
+        {currentPortal === 'admin' && (
+          <div className="md:hidden py-2 border-t border-slate-800/80 overflow-x-auto no-scrollbar touch-scroll">
+            <div className="flex items-center gap-1.5 min-w-max px-0.5">
+              <button
+                onClick={() => setAdminTab('dashboard')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 active:scale-95 ${
+                  adminTab === 'dashboard'
+                    ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-md shadow-orange-500/30 ring-1 ring-orange-400/40'
+                    : 'text-slate-300 hover:text-white bg-slate-900/60 border border-slate-800'
+                }`}
+              >
+                <LayoutDashboard className="w-3.5 h-3.5 text-amber-300" />
+                <span>Dashboard</span>
+              </button>
+
+              <button
+                onClick={() => setAdminTab('attendance')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 active:scale-95 ${
+                  adminTab === 'attendance'
+                    ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-md shadow-orange-500/30 ring-1 ring-orange-400/40'
+                    : 'text-slate-300 hover:text-white bg-slate-900/60 border border-slate-800'
+                }`}
+              >
+                <ClipboardList className="w-3.5 h-3.5 text-orange-300" />
+                <span>Attendance Logs</span>
+              </button>
+
+              <button
+                onClick={() => setAdminTab('students')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 active:scale-95 ${
+                  adminTab === 'students'
+                    ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-md shadow-orange-500/30 ring-1 ring-orange-400/40'
+                    : 'text-slate-300 hover:text-white bg-slate-900/60 border border-slate-800'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5 text-blue-300" />
+                <span>Students Directory</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

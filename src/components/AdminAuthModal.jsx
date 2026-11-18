@@ -97,44 +97,44 @@ export default function AdminAuthModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-darkbg-950 border border-orange-500/30 rounded-3xl shadow-[0_0_50px_rgba(249,115,22,0.15)] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in touch-scroll">
+      <div className="relative w-full max-w-md bg-darkbg-950 border border-orange-500/30 rounded-2xl sm:rounded-3xl shadow-[0_0_50px_rgba(249,115,22,0.15)] overflow-hidden flex flex-col max-h-[95vh] animate-scale-in">
         {/* Top Header Glow Ribbon */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-orange-500 via-amber-400 to-orange-600" />
+        <div className="h-1.5 w-full bg-gradient-to-r from-orange-500 via-amber-400 to-orange-600 flex-shrink-0" />
 
         {/* Modal Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/60 transition"
+          className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/60 transition active:scale-95"
           title="Close"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="p-6 sm:p-8 flex flex-col">
+        <div className="p-4 sm:p-8 flex flex-col overflow-y-auto touch-scroll">
           {/* Logo & Seal Header */}
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="relative w-16 h-16 rounded-2xl bg-darkbg-900 border border-orange-500/40 p-1.5 shadow-xl shadow-orange-500/20 mb-3 flex items-center justify-center">
+          <div className="flex flex-col items-center text-center mb-5 sm:mb-6">
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-darkbg-900 border border-orange-500/40 p-1.5 shadow-xl shadow-orange-500/20 mb-2.5 sm:mb-3 flex items-center justify-center">
               <img
                 src="/km100-logo.webp"
                 alt="KM100 Logo"
                 className="w-full h-full object-contain"
               />
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-600 border-2 border-darkbg-950 flex items-center justify-center text-white">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-200" />
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-600 border-2 border-darkbg-950 flex items-center justify-center text-white">
+                <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-200" />
               </div>
             </div>
             
-            <h2 className="text-xl font-black text-white tracking-tight uppercase">
+            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
               KM100 <span className="text-orange-400">Admin Portal</span>
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1">
               Authorized School Personnel & Security Verification
             </p>
           </div>
 
           {/* Mode Switcher Tabs */}
-          <div className="grid grid-cols-2 p-1 bg-darkbg-900 border border-slate-800 rounded-2xl mb-5">
+          <div className="grid grid-cols-2 p-1 bg-darkbg-900 border border-slate-800 rounded-2xl mb-4 sm:mb-5">
             <button
               type="button"
               onClick={() => {
@@ -142,7 +142,7 @@ export default function AdminAuthModal({
                 setErrorMsg('');
                 setSuccessMsg('');
               }}
-              className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black transition-all ${
+              className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black transition-all active:scale-95 ${
                 mode === 'login'
                   ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-md shadow-orange-500/30'
                   : 'text-slate-400 hover:text-white'
@@ -159,9 +159,9 @@ export default function AdminAuthModal({
                 setErrorMsg('');
                 setSuccessMsg('');
               }}
-              className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black transition-all ${
+              className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black transition-all active:scale-95 ${
                 mode === 'register'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30'
+                  ? 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-md shadow-orange-500/30'
                   : 'text-slate-400 hover:text-white'
               }`}
             >

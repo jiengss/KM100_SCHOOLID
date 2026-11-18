@@ -140,12 +140,12 @@ export default function AttendanceLogView({ logs, students }) {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           {/* IN / OUT Filter */}
           <div className="bg-slate-900 p-1 rounded-xl border border-slate-800 flex items-center">
             <button
               onClick={() => setFilterType('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 ${
                 filterType === 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -153,7 +153,7 @@ export default function AttendanceLogView({ logs, students }) {
             </button>
             <button
               onClick={() => setFilterType('IN')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 ${
                 filterType === 'IN' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -161,7 +161,7 @@ export default function AttendanceLogView({ logs, students }) {
             </button>
             <button
               onClick={() => setFilterType('OUT')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 ${
                 filterType === 'OUT' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -173,7 +173,7 @@ export default function AttendanceLogView({ logs, students }) {
           <div className="bg-slate-900 p-1 rounded-xl border border-slate-800 flex items-center">
             <button
               onClick={() => setFilterDate('TODAY')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 ${
                 filterDate === 'TODAY' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -181,7 +181,7 @@ export default function AttendanceLogView({ logs, students }) {
             </button>
             <button
               onClick={() => setFilterDate('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 ${
                 filterDate === 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -193,8 +193,8 @@ export default function AttendanceLogView({ logs, students }) {
 
       {/* Logs Table */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="overflow-x-auto touch-scroll">
+          <table className="w-full text-left text-xs whitespace-nowrap">
             <thead className="bg-slate-950/70 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
               <tr>
                 <th className="py-3.5 px-4">Event Type</th>

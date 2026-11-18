@@ -119,33 +119,33 @@ export default function AdminDashboard({
       {/* ============================================================== */}
       {/* 1. ADMIN HEADER & QUICK ACTIONS                                */}
       {/* ============================================================== */}
-      <div className="glass-panel-glow rounded-3xl p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden shadow-2xl">
+      <div className="glass-panel-glow rounded-3xl p-4 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden shadow-2xl transition-all">
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500" />
         
-        <div className="flex items-center gap-3.5">
-          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-darkbg-950 border border-orange-500/40 p-1 flex items-center justify-center shadow-lg shadow-orange-500/10 flex-shrink-0">
+        <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-darkbg-950 border border-orange-500/40 p-1 flex items-center justify-center shadow-lg shadow-orange-500/10 flex-shrink-0 transition-transform active:scale-95">
             <img src="/km100-logo.webp" alt="KM100 Logo" className="w-full h-full object-contain" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight uppercase truncate">
                 Admin Control Center & Analytics
               </h2>
               <span className="px-2.5 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-300 text-[10px] font-black uppercase tracking-wider hidden sm:inline">
                 TESDA NC II
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5 truncate">
               KM100 Skills and Training Center, Inc. • Attendance Monitoring & Student Operations
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2.5 flex-wrap self-stretch sm:self-auto">
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full md:w-auto">
           <button
             onClick={onOpenAddStudent}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white rounded-xl text-xs font-black transition shadow-lg shadow-orange-500/25 hover:scale-[1.02]"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-orange-500/25 active:scale-95 hover:scale-[1.02]"
           >
             <UserPlus className="w-4 h-4" />
             <span>Register Student</span>
@@ -153,7 +153,7 @@ export default function AdminDashboard({
 
           <button
             onClick={exportCSV}
-            className="flex items-center gap-2 px-3.5 py-2.5 bg-darkbg-850 hover:bg-darkbg-800 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition shadow-sm hover:scale-[1.02]"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 bg-darkbg-850 hover:bg-darkbg-800 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition shadow-sm active:scale-95 hover:scale-[1.02]"
           >
             <Download className="w-4 h-4 text-orange-400" />
             <span>Export CSV</span>
@@ -161,7 +161,7 @@ export default function AdminDashboard({
 
           <button
             onClick={onLaunchGateTV}
-            className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black transition shadow-lg shadow-blue-500/20 hover:scale-[1.02]"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black transition shadow-lg shadow-blue-500/20 active:scale-95 hover:scale-[1.02]"
           >
             <DoorOpen className="w-4 h-4" />
             <span>Open Gate TV</span>
@@ -343,29 +343,31 @@ export default function AdminDashboard({
             </p>
           </div>
 
-          <div className="mt-6 flex items-end justify-between gap-2 h-44 px-2 pt-4 border-b border-slate-800">
-            {hourlyBuckets.map((bucket, idx) => {
-              const heightPercent = Math.max(12, Math.round((bucket.count / maxHourly) * 100));
-              return (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                  <span className="text-[10px] font-mono font-bold text-orange-300 opacity-0 group-hover:opacity-100 transition">
-                    {bucket.count}
-                  </span>
-                  <div
-                    className="w-full max-w-[28px] bg-gradient-to-t from-orange-600 to-amber-400 rounded-t-lg transition-all duration-500 shadow-md group-hover:brightness-125"
-                    style={{ height: `${heightPercent}%` }}
-                  />
-                  <span className="text-[9px] font-mono text-slate-400 truncate max-w-full text-center mt-1">
-                    {bucket.label.split(' ')[0]}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="mt-6 overflow-x-auto no-scrollbar touch-scroll">
+            <div className="flex items-end justify-between gap-2 h-44 px-2 pt-4 border-b border-slate-800 min-w-[280px]">
+              {hourlyBuckets.map((bucket, idx) => {
+                const heightPercent = Math.max(12, Math.round((bucket.count / maxHourly) * 100));
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                    <span className="text-[10px] font-mono font-bold text-orange-300 opacity-0 group-hover:opacity-100 transition">
+                      {bucket.count}
+                    </span>
+                    <div
+                      className="w-full max-w-[28px] bg-gradient-to-t from-orange-600 to-amber-400 rounded-t-lg transition-all duration-500 shadow-md group-hover:brightness-125"
+                      style={{ height: `${heightPercent}%` }}
+                    />
+                    <span className="text-[9px] font-mono text-slate-400 truncate max-w-full text-center mt-1">
+                      {bucket.label.split(' ')[0]}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
+          <div className="mt-4 flex flex-col xs:flex-row items-start xs:items-center justify-between text-xs text-slate-400 gap-1.5">
             <span className="flex items-center gap-1.5 font-medium">
-              <span className="w-2.5 h-2.5 rounded-sm bg-orange-500" /> Peak Morning Rush: <strong>07:00 AM - 08:30 AM</strong>
+              <span className="w-2.5 h-2.5 rounded-sm bg-orange-500 flex-shrink-0" /> Peak Morning Rush: <strong>07:00 AM - 08:30 AM</strong>
             </span>
             <span className="font-mono text-orange-300 font-bold">Turnstile Flow OK</span>
           </div>
@@ -380,14 +382,14 @@ export default function AdminDashboard({
             </h3>
             <button
               onClick={() => onNavigateTab('attendance')}
-              className="text-xs font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1"
+              className="text-xs font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 active:scale-95 transition"
             >
               <span>Full Audit Logs</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="mt-3 flex-1 overflow-y-auto space-y-2.5 max-h-[280px] pr-1">
+          <div className="mt-3 flex-1 overflow-y-auto touch-scroll space-y-2.5 max-h-[280px] pr-1">
             {todayLogs.length === 0 ? (
               <div className="h-40 flex flex-col items-center justify-center text-slate-500 text-xs text-center">
                 <span>No scans recorded today yet.</span>

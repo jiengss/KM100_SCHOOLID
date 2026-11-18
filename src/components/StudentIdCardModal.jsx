@@ -222,35 +222,35 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in touch-scroll">
+      <div className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[92vh] animate-scale-in">
         {/* Modal Top Bar */}
-        <div className="no-print flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/70">
-          <div className="flex items-center gap-2 text-white font-bold">
-            <CourseIcon className="w-5 h-5 text-amber-400" />
-            <span className="text-sm font-bold">School ID Card (3" × 2" Landscape Badge)</span>
+        <div className="no-print flex items-center justify-between px-3.5 sm:px-6 py-3 sm:py-4 border-b border-slate-800 bg-slate-950/70 gap-2">
+          <div className="flex items-center gap-2 text-white font-bold min-w-0">
+            <CourseIcon className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-bold truncate">School ID Card (3" × 2" Badge)</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white rounded-xl text-xs font-bold transition shadow-md shadow-orange-600/30"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white rounded-xl text-xs font-bold transition shadow-md shadow-orange-600/30 active:scale-95"
             >
-              <Printer className="w-4 h-4" />
-              <span>Print 3×2" Badge</span>
+              <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span><span className="hidden xs:inline">Print </span>3×2" Badge</span>
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition active:scale-95"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
 
         {/* Card Viewport Container */}
-        <div className="p-8 sm:p-12 overflow-y-auto flex flex-col items-center justify-center bg-slate-950/60 min-h-[340px]">
-          {/* Zoom Preview Wrapper (Enlarged on screen, 100% exact 3in x 2in in print) */}
-          <div className="scale-[1.25] sm:scale-[1.35] origin-center shadow-2xl rounded-xl transition-transform">
+        <div className="p-3 xs:p-6 sm:p-12 overflow-x-hidden overflow-y-auto flex flex-col items-center justify-center bg-slate-950/60 min-h-[260px] sm:min-h-[340px]">
+          {/* Zoom Preview Wrapper (Adaptive on mobile, enlarged on desktop, 100% exact 3in x 2in in print) */}
+          <div className="scale-[0.85] xs:scale-100 sm:scale-[1.25] md:scale-[1.35] origin-center shadow-2xl rounded-xl transition-all duration-300 my-1">
             {/* 
               ID BADGE: EXACT 3" × 2" LANDSCAPE PROPORTION (288px × 192px at 96 DPI)
             */}
@@ -395,13 +395,13 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
         </div>
 
         {/* Modal Info Footer */}
-        <div className="no-print px-6 py-3 border-t border-slate-800 bg-slate-950/60 text-xs text-slate-400 flex items-center justify-between">
-          <span className="text-slate-400 text-[11px]">
-            Standard <strong>3" × 2" Landscape ID card</strong> — fits 100% on card printers & letter paper without cutting off.
+        <div className="no-print px-4 sm:px-6 py-2.5 sm:py-3 border-t border-slate-800 bg-slate-950/60 text-xs text-slate-400 flex flex-col xs:flex-row items-center justify-between gap-2 text-center xs:text-left">
+          <span className="text-slate-400 text-[10px] sm:text-[11px]">
+            Standard <strong>3" × 2" Landscape ID card</strong> — fits 100% on card printers & paper without cutting off.
           </span>
           <button
             onClick={handlePrint}
-            className="text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1 text-xs"
+            className="text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1 text-xs active:scale-95 transition"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print Badge</span>

@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     margin: 0;
     min-height: 100vh;
@@ -13,6 +18,7 @@
       radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
       linear-gradient(to bottom, #070a10 0%, #0a0e17 100%);
     background-attachment: fixed;
+    overflow-x: hidden;
   }
 }
 
@@ -24,12 +30,13 @@
   background-size: 28px 28px;
 }
 
-/* Glassmorphism Classes */
+/* Glassmorphism Classes with GPU Smooth Acceleration */
 .glass-panel {
   background: rgba(13, 19, 31, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  transform: translateZ(0);
 }
 
 .glass-panel-glow {
@@ -38,9 +45,27 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(249, 115, 22, 0.25);
   box-shadow: 0 0 50px -10px rgba(249, 115, 22, 0.15);
+  transform: translateZ(0);
 }
 
-/* Custom Scrollbars */
+/* Ultra Smooth Touch Momentum Scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom Desktop Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -51,9 +76,29 @@
 ::-webkit-scrollbar-thumb {
   background: rgba(249, 115, 22, 0.35);
   border-radius: 9999px;
+  transition: background 0.2s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(249, 115, 22, 0.6);
+}
+
+/* Hardware accelerated transitions */
+.smooth-gpu {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Print Styles for 3x2 inches (Landscape) School ID Badges */
