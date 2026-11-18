@@ -1,5 +1,6 @@
 {
   "name": "km100-school-id-system",
+  "description": "KM100 Skills and Training Center, Inc. - Smart School ID & Gate Attendance Kiosk",
   "private": true,
   "version": "1.0.0",
   "type": "module",

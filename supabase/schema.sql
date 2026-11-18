@@ -1,4 +1,5 @@
 -- ==============================================================================
+-- KM100 SKILLS AND TRAINING CENTER, INC.
 -- SCHOOL ID SCANNER & ATTENDANCE SYSTEM - SUPABASE DATABASE SCHEMA
 -- TECHNICAL-VOCATIONAL & TECHNOLOGY PROGRAMS (NC II SPECIALIZATION)
 -- ==============================================================================

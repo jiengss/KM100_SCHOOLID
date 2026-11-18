@@ -14,7 +14,10 @@ import {
 } from 'lucide-react';
 import { getStoredSupabaseConfig, saveStoredSupabaseConfig, dbService } from '../lib/supabaseClient';
 
-const SUPABASE_SCHEMA_SQL = `-- SCHOOL ID SCANNER & ATTENDANCE SYSTEM - SUPABASE DATABASE SCHEMA
+const SUPABASE_SCHEMA_SQL = `-- ==============================================================================
+-- KM100 SKILLS AND TRAINING CENTER, INC.
+-- SCHOOL ID SCANNER & ATTENDANCE SYSTEM - SUPABASE DATABASE SCHEMA
+-- ==============================================================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. Create STUDENTS Table
