@@ -11,8 +11,7 @@ import {
   Compass, 
   Utensils, 
   Coffee, 
-  Award,
-  PhoneCall
+  Award
 } from 'lucide-react';
 
 // Specialized Theme & Department configurations for each NC II Course
@@ -129,7 +128,7 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Top Bar */}
         <div className="no-print flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/70">
           <div className="flex items-center gap-2 text-white font-bold">
@@ -154,151 +153,160 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
         </div>
 
         {/* Card Viewport Container */}
-        <div className="p-6 overflow-y-auto flex flex-col items-center justify-center bg-slate-950/50">
-          {/* 
-            ID BADGE: EXACT 3" × 2" LANDSCAPE PROPORTION (Ratio 3:2) 
-            Width: 460px, Height: 306px on screen
-          */}
-          <div
-            id="printable-id-card"
-            className="w-[460px] h-[306px] rounded-2xl bg-white text-slate-900 shadow-2xl overflow-hidden border-2 border-slate-200 relative flex flex-col justify-between select-none"
-            style={{ width: '460px', height: '306px' }}
-          >
-            {/* Header: School Logo, School Name & Course Department */}
-            <div className={`${config.headerBg} text-white px-4 py-2 relative overflow-hidden flex-shrink-0 border-b-2 border-amber-400`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-white p-0.5 shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="p-8 sm:p-12 overflow-y-auto flex flex-col items-center justify-center bg-slate-950/60 min-h-[340px]">
+          {/* Zoom Preview Wrapper (Enlarged on screen, 100% exact 3in x 2in in print) */}
+          <div className="scale-[1.25] sm:scale-[1.35] origin-center shadow-2xl rounded-xl transition-transform">
+            {/* 
+              ID BADGE: EXACT 3" × 2" LANDSCAPE PROPORTION (288px × 192px at 96 DPI)
+            */}
+            <div
+              id="printable-id-card"
+              className="bg-white text-slate-900 shadow-2xl overflow-hidden border border-slate-300 relative flex flex-col justify-between select-none rounded-xl"
+              style={{ width: '3in', height: '2in', boxSizing: 'border-box' }}
+            >
+              {/* Header: School Logo, School Name & Course Department (Height: 28px) */}
+              <div className={`${config.headerBg} text-white px-2.5 py-1 h-[28px] relative overflow-hidden flex-shrink-0 flex items-center justify-between border-b-2 border-amber-400`}>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="w-5 h-5 rounded-full bg-white p-0.5 shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
                     <img
                       src="/km100-logo.webp"
                       alt="KM100 Logo"
                       className="w-full h-full object-contain rounded-full"
                     />
                   </div>
-                  <div>
-                    <span className="font-black text-[11px] tracking-wider uppercase text-white block leading-tight">
+                  <div className="min-w-0">
+                    <span className="font-black text-[8.5px] tracking-wider uppercase text-white block leading-none truncate">
                       KM100 TRAINING CENTER, INC.
                     </span>
-                    <span className="text-[8.5px] font-bold tracking-widest text-amber-300 uppercase block">
+                    <span className="text-[6.5px] font-bold tracking-widest text-amber-300 uppercase block leading-none mt-0.5 truncate">
                       {config.department}
                     </span>
                   </div>
                 </div>
 
                 {/* Course Department Short Code Badge */}
-                <div className="flex items-center gap-1 bg-white/10 border border-white/20 px-2.5 py-0.5 rounded-full text-[9px] font-black text-amber-300 flex-shrink-0 shadow-sm">
-                  <CourseIcon className="w-3 h-3" />
+                <div className="flex items-center gap-1 bg-white/15 border border-white/20 px-1.5 py-0.5 rounded-full text-[7px] font-black text-amber-300 flex-shrink-0 shadow-sm ml-1">
+                  <CourseIcon className="w-2.5 h-2.5" />
                   <span>{config.shortCode}</span>
                 </div>
               </div>
-            </div>
 
-            {/* Middle Horizontal Body (Two-Column Layout for 3" x 2" landscape) */}
-            <div className="flex-1 px-4 py-2.5 flex items-stretch gap-3.5 bg-gradient-to-br from-white via-slate-50/50 to-white">
-              {/* LEFT COLUMN: Student Photo & Emergency Summary */}
-              <div className="w-[125px] flex flex-col items-center justify-between flex-shrink-0">
-                {/* Photo with Course Ring */}
-                <div className="relative">
-                  <div className={`w-[98px] h-[98px] rounded-2xl overflow-hidden border-2 ${config.photoRing} shadow-md bg-slate-100`}>
-                    <img
-                      src={student.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300"}
-                      alt={student.first_name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full border border-white shadow-sm flex items-center gap-0.5">
-                    <ShieldCheck className="w-2.5 h-2.5" />
-                    <span>ACTIVE</span>
-                  </div>
-                </div>
-
-                {/* Emergency Contact Mini Pill */}
-                {student.emergency_contact_phone && (
-                  <div className="w-full bg-slate-100 border border-slate-200 rounded-lg p-1.5 text-center mt-1.5 shadow-inner">
-                    <span className="text-[7px] font-extrabold text-slate-400 uppercase tracking-wider block leading-none">
-                      Emergency Contact
-                    </span>
-                    <div className="text-[8px] text-slate-700 truncate mt-1 font-bold leading-none">
-                      {student.emergency_contact_phone}
+              {/* Middle Horizontal Body (Height: 146px) */}
+              <div className="h-[146px] px-2.5 py-1.5 flex items-stretch gap-2.5 bg-gradient-to-br from-white via-slate-50/60 to-white flex-1 overflow-hidden">
+                {/* LEFT COLUMN: Student Photo & Emergency Summary */}
+                <div className="w-[74px] flex flex-col items-center justify-between flex-shrink-0">
+                  {/* Photo with Course Ring */}
+                  <div className="relative">
+                    <div className={`w-[70px] h-[70px] rounded-xl overflow-hidden border-2 ${config.photoRing} shadow-sm bg-slate-100`}>
+                      <img
+                        src={student.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300"}
+                        alt={student.first_name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white text-[7px] font-black uppercase px-1 py-0.2 rounded-full border border-white shadow-sm flex items-center gap-0.5">
+                      <ShieldCheck className="w-2 h-2" />
+                      <span>ACTIVE</span>
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* RIGHT COLUMN: Identity, Specialization & High-Res QR Code */}
-              <div className="flex-1 flex flex-col justify-between min-w-0">
-                {/* Student Name */}
-                <div>
-                  <h2 className="text-base font-black text-slate-900 tracking-tight leading-snug truncate">
-                    {student.first_name} {student.middle_name ? student.middle_name[0] + '.' : ''} {student.last_name}
-                  </h2>
-
-                  {/* Year & Section Pill */}
-                  <div className="mt-1 flex items-center gap-2 flex-wrap">
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wide border ${config.badgeBg}`}>
-                      {student.grade_level} • {student.section}
-                    </span>
-                  </div>
-
-                  {/* NC II Program Specialization Banner */}
-                  <div className="mt-1 flex items-center gap-1 text-[8.5px] font-extrabold text-slate-700 uppercase tracking-tight">
-                    <Award className={`w-3 h-3 ${config.accentColor} flex-shrink-0`} />
-                    <span className="truncate">{student.course_strand || 'Technical Vocational (NC II)'}</span>
-                  </div>
-                </div>
-
-                {/* QR Code Barcode Box & ID Numbers */}
-                <div className="mt-2 bg-slate-50 border border-slate-200/90 rounded-xl p-2 flex items-center gap-2.5 shadow-inner">
-                  {/* High-Resolution QR Code */}
-                  <div className="p-1 bg-white rounded-lg border border-slate-300 shadow-sm flex flex-col items-center flex-shrink-0">
-                    <QRCodeSVG
-                      value={student.school_id}
-                      size={64}
-                      level="H"
-                      includeMargin={false}
-                    />
-                    <span className="text-[6.5px] font-black text-slate-500 uppercase mt-0.5 tracking-wider">
-                      TAP / SCAN QR
-                    </span>
-                  </div>
-
-                  {/* School ID Numbers */}
-                  <div className="min-w-0 flex-1">
-                    <span className="text-[7.5px] font-bold text-slate-400 uppercase tracking-wider block">
-                      Student ID No.
-                    </span>
-                    <span className="font-mono font-black text-slate-900 text-sm tracking-tight block leading-tight">
-                      {student.school_id}
-                    </span>
-                    {student.rfid_uid && (
-                      <span className="text-[8px] font-mono font-semibold text-slate-500 block truncate mt-0.5">
-                        RFID: {student.rfid_uid}
+                  {/* Emergency Mini Pill */}
+                  {student.emergency_contact_phone ? (
+                    <div className="w-full bg-slate-100 border border-slate-200 rounded p-1 text-center mt-1 shadow-inner">
+                      <span className="text-[6px] font-black text-slate-400 uppercase tracking-wider block leading-none">
+                        Emergency
                       </span>
-                    )}
-                    <span className="text-[7.5px] text-emerald-600 font-bold block mt-0.5 uppercase tracking-wider">
-                      ● Official Campus Access
-                    </span>
+                      <div className="text-[7px] text-slate-700 truncate mt-0.5 font-bold leading-none">
+                        {student.emergency_contact_phone}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full bg-slate-100 border border-slate-200 rounded p-1 text-center mt-1 shadow-inner">
+                      <span className="text-[6px] font-black text-slate-400 uppercase tracking-wider block leading-none">
+                        Official ID
+                      </span>
+                      <span className="text-[6.5px] font-bold text-slate-600 block leading-none mt-0.5">
+                        Verified
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* RIGHT COLUMN: Identity, Specialization & High-Res QR Code */}
+                <div className="flex-1 flex flex-col justify-between min-w-0">
+                  {/* Student Name & Academic Details */}
+                  <div>
+                    <h2 className="text-[12px] font-black text-slate-900 tracking-tight leading-tight">
+                      {student.first_name} {student.middle_name ? student.middle_name[0] + '.' : ''} {student.last_name}
+                    </h2>
+
+                    {/* Year & Section Pill */}
+                    <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                      <span className={`px-1.5 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-wide border ${config.badgeBg} leading-none`}>
+                        {student.grade_level} • {student.section}
+                      </span>
+                    </div>
+
+                    {/* NC II Program Specialization Banner */}
+                    <div className="mt-1 flex items-center gap-1 text-[7px] font-extrabold text-slate-700 uppercase tracking-tight leading-tight">
+                      <Award className={`w-2.5 h-2.5 ${config.accentColor} flex-shrink-0`} />
+                      <span className="line-clamp-1">{student.course_strand || 'Technical Vocational (NC II)'}</span>
+                    </div>
+                  </div>
+
+                  {/* QR Code Barcode Box & ID Numbers */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-1.5 flex items-center gap-2 shadow-inner">
+                    {/* High-Resolution QR Code */}
+                    <div className="p-0.5 bg-white rounded border border-slate-300 shadow-sm flex flex-col items-center flex-shrink-0">
+                      <QRCodeSVG
+                        value={student.school_id}
+                        size={46}
+                        level="M"
+                        includeMargin={false}
+                      />
+                      <span className="text-[5.5px] font-black text-slate-500 uppercase mt-0.5 tracking-wider leading-none">
+                        SCAN QR
+                      </span>
+                    </div>
+
+                    {/* School ID Numbers */}
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[6px] font-bold text-slate-400 uppercase tracking-wider block leading-none">
+                        Student ID No.
+                      </span>
+                      <span className="font-mono font-black text-slate-900 text-[11px] tracking-tight block leading-tight mt-0.5">
+                        {student.school_id}
+                      </span>
+                      {student.rfid_uid && (
+                        <span className="text-[6.5px] font-mono font-semibold text-slate-500 block truncate leading-none mt-0.5">
+                          RFID: {student.rfid_uid}
+                        </span>
+                      )}
+                      <span className="text-[6.5px] text-emerald-600 font-bold block mt-0.5 uppercase tracking-wider leading-none">
+                        ● Campus Access
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Footer Stripe: Accreditation & Academic Year */}
-            <div className={`${config.headerBg} text-white px-3.5 py-1 flex items-center justify-between text-[8px] font-medium tracking-wider uppercase flex-shrink-0 border-t border-amber-400/40`}>
-              <span className="text-amber-300 font-bold truncate max-w-[280px]">{config.ncBadge}</span>
-              <span className="text-slate-200 font-mono flex-shrink-0">S.Y. 2024-2025</span>
+              {/* Footer Stripe: Accreditation & Academic Year (Height: 18px) */}
+              <div className={`${config.headerBg} text-white px-2.5 h-[18px] flex items-center justify-between text-[6.5px] font-medium tracking-wider uppercase flex-shrink-0 border-t border-amber-400/40`}>
+                <span className="text-amber-300 font-bold truncate max-w-[190px]">{config.ncBadge}</span>
+                <span className="text-slate-200 font-mono flex-shrink-0">S.Y. 2024-2025</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Modal Info Footer */}
         <div className="no-print px-6 py-3 border-t border-slate-800 bg-slate-950/60 text-xs text-slate-400 flex items-center justify-between">
-          <span className="text-slate-400">
-            Form-factored to standard <strong>3" × 2" Landscape ID card</strong> dimensions with NC II course theme.
+          <span className="text-slate-400 text-[11px]">
+            Standard <strong>3" × 2" Landscape ID card</strong> — fits 100% on card printers & letter paper without cutting off.
           </span>
           <button
             onClick={handlePrint}
-            className="text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1"
+            className="text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1 text-xs"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print Badge</span>
