@@ -62,8 +62,6 @@ export default function Navbar({
                 alt="KM100 Logo"
                 className="w-full h-full object-contain"
               />
-              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-400 rounded-full ring-2 ring-white dark:ring-darkbg-950 animate-ping" />
-              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-400 rounded-full ring-2 ring-white dark:ring-darkbg-950" />
             </div>
 
             <div className="min-w-0">
@@ -131,15 +129,7 @@ export default function Navbar({
                 <span>Students Directory</span>
               </button>
             </nav>
-          ) : (
-            /* MAIN GATE PUBLIC SCREEN: PURE GATE ACTIVE INDICATOR */
-            <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-slate-100 dark:bg-darkbg-900/80 border border-slate-200 dark:border-slate-800 shadow-inner">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping" />
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                Turnstile Gate 1 • Campus Entrance Active
-              </span>
-            </div>
-          )}
+          ) : null}
 
           {/* ======================================================== */}
           {/* RIGHT ACTION CONTROLS & PORTAL SWITCH BUTTON             */}
@@ -179,7 +169,7 @@ export default function Navbar({
               <div
                 className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
                   soundEnabled
-                    ? 'bg-emerald-500 dark:bg-emerald-400 shadow-sm shadow-emerald-400 animate-pulse'
+                    ? 'bg-emerald-500 dark:bg-emerald-400 shadow-sm shadow-emerald-400'
                     : 'bg-slate-400 dark:bg-slate-600'
                 }`}
               />
