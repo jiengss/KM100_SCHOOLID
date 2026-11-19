@@ -93,8 +93,8 @@ export default function ManualScanModal({ isOpen, onClose, onScan, sampleStudent
                         <div className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-300 transition">
                           {student.first_name} {student.last_name}
                         </div>
-                        <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono">
-                          ID: {student.school_id} • {student.grade_level}
+                        <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono truncate max-w-[180px] sm:max-w-xs">
+                          ID: {student.school_id} {student.course_strand ? `• ${student.course_strand}` : ''}
                         </div>
                       </div>
                     </div>

@@ -90,7 +90,7 @@ export default function AdminDashboard({
       alert("No attendance records to export.");
       return;
     }
-    const headers = ["Timestamp", "Date", "Time", "Log Type", "School ID", "Student Name", "Course", "Section", "Gate"];
+    const headers = ["Timestamp", "Date", "Time", "Log Type", "School ID", "Student Name", "Course / Program", "Gate"];
     const rows = logs.map(l => {
       const s = l.student || students.find(st => st.id === l.student_id || st.school_id === l.school_id);
       const d = new Date(l.timestamp);
@@ -101,8 +101,7 @@ export default function AdminDashboard({
         l.log_type,
         l.school_id,
         s ? `"${s.first_name} ${s.last_name}"` : 'Unknown',
-        s ? `"${s.course_strand}"` : '',
-        s ? `"${s.section}"` : '',
+        s ? `"${s.course_strand || 'General'}"` : '',
         `"${l.gate_station || 'Main Gate'}"`
       ];
     });

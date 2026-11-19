@@ -148,7 +148,7 @@ export default function StudentManager({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by student name, school ID, or section..."
+            placeholder="Search by student name, school ID, or course..."
             className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 transition shadow-sm"
           />
         </div>
@@ -183,7 +183,6 @@ export default function StudentManager({
               <tr>
                 <th className="py-3.5 px-4">Student</th>
                 <th className="py-3.5 px-4">School ID</th>
-                <th className="py-3.5 px-4">Year & Section</th>
                 <th className="py-3.5 px-4">NC II Course / Program</th>
                 <th className="py-3.5 px-4">Status</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
@@ -192,7 +191,7 @@ export default function StudentManager({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="py-12 text-center text-slate-500">
+                  <td colSpan="5" className="py-12 text-center text-slate-500">
                     No students found matching your criteria.
                   </td>
                 </tr>
@@ -220,10 +219,6 @@ export default function StudentManager({
                       <span className="font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-500/20">
                         {student.school_id}
                       </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-slate-800 dark:text-slate-200">{student.grade_level}</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">{student.section}</div>
                     </td>
                     <td className="py-3 px-4">
                       <span className="font-semibold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 inline-block">
@@ -346,34 +341,6 @@ export default function StudentManager({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Year / Grade Level</label>
-                  <select
-                    value={formData.grade_level}
-                    onChange={(e) => setFormData({ ...formData, grade_level: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="1st Year">1st Year</option>
-                    <option value="2nd Year">2nd Year</option>
-                    <option value="3rd Year">3rd Year</option>
-                    <option value="4th Year">4th Year</option>
-                    <option value="Grade 11 (Senior High)">Grade 11 (Senior High)</option>
-                    <option value="Grade 12 (Senior High)">Grade 12 (Senior High)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Section</label>
-                  <input
-                    type="text"
-                    value={formData.section}
-                    onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                    placeholder="e.g. CET-1A, HT-2B"
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
               {/* NC II Course Dropdown */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -456,7 +423,7 @@ export default function StudentManager({
         message="Are you sure you want to permanently delete this student record? Their campus gate admission privileges and barcode credentials will be immediately revoked."
         itemDetails={studentToDelete ? {
           title: `${studentToDelete.first_name} ${studentToDelete.middle_name ? studentToDelete.middle_name + ' ' : ''}${studentToDelete.last_name}`,
-          subtitle: `${studentToDelete.grade_level} • ${studentToDelete.section} • ${studentToDelete.course_strand || 'NC II Technology'}`,
+          subtitle: studentToDelete.course_strand || 'NC II Technology Program',
           image: studentToDelete.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
           tag: `ID: ${studentToDelete.school_id}`,
           tagColor: 'blue'

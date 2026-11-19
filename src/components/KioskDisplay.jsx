@@ -331,13 +331,10 @@ export default function KioskDisplay({
                   {lastScanResult.student.first_name} {lastScanResult.student.middle_name ? lastScanResult.student.middle_name + ' ' : ''}{lastScanResult.student.last_name}
                 </h2>
 
-                {/* ID & Year Level Badge */}
+                {/* ID Badge */}
                 <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-2">
                   <span className="px-3 py-0.5 sm:py-1 rounded-full bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-300 border border-orange-500/30 text-[11px] sm:text-xs font-extrabold font-mono shadow-sm">
                     ID: {lastScanResult.student.school_id}
-                  </span>
-                  <span className="px-3 py-0.5 sm:py-1 rounded-full bg-slate-100 dark:bg-darkbg-850 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-[11px] sm:text-xs font-bold">
-                    {lastScanResult.student.grade_level} • {lastScanResult.student.section}
                   </span>
                 </div>
 

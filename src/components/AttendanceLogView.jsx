@@ -41,7 +41,7 @@ export default function AttendanceLogView({ logs, students }) {
       return;
     }
 
-    const headers = ["Timestamp", "Date", "Time", "Log Type", "School ID", "Student Name", "Grade & Section", "Gate/Station", "Remarks"];
+    const headers = ["Timestamp", "Date", "Time", "Log Type", "School ID", "Student Name", "Course / Program", "Gate/Station", "Remarks"];
     const rows = filteredLogs.map(log => {
       const student = log.student || students.find(s => s.id === log.student_id || s.school_id === log.school_id);
       const d = new Date(log.timestamp);
@@ -52,7 +52,7 @@ export default function AttendanceLogView({ logs, students }) {
         log.log_type,
         log.school_id,
         student ? `"${student.first_name} ${student.last_name}"` : 'Unknown',
-        student ? `"${student.grade_level} - ${student.section}"` : '',
+        student ? `"${student.course_strand || 'General'}"` : '',
         `"${log.gate_station || 'Main Gate Kiosk'}"`,
         `"${log.remarks || 'Normal'}"`
       ];

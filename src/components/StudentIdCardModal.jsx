@@ -335,10 +335,10 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
                       {student.first_name} {student.middle_name ? student.middle_name[0] + '.' : ''} {student.last_name}
                     </h2>
 
-                    {/* Year & Section Pill */}
+                    {/* Trainee Qualification Pill */}
                     <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                       <span className={`px-1.5 py-0.5 rounded-full text-[7.5px] font-black uppercase tracking-wide border ${config.badgeBg} leading-none`}>
-                        {student.grade_level} • {student.section}
+                        {config.ncBadge || 'NATIONAL CERTIFICATE LEVEL II'}
                       </span>
                     </div>
 
