@@ -442,7 +442,7 @@ export default function KioskDisplay({
                 {/* Gate Online Badge */}
                 <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white dark:text-slate-950 text-[9px] sm:text-[10px] font-black uppercase px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full border-2 border-white dark:border-darkbg-950 flex items-center gap-1 sm:gap-1.5 shadow-xl z-20 whitespace-nowrap">
                   <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
-                  <span>GATE 1 • SCANNER READY</span>
+                  <span>MAIN GATE • SCANNER READY</span>
                 </div>
               </div>
 
@@ -450,47 +450,24 @@ export default function KioskDisplay({
               <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight uppercase leading-snug drop-shadow-sm px-2">
                 TAP OR SCAN YOUR <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 dark:from-orange-400 dark:via-amber-300 dark:to-orange-500 bg-clip-text text-transparent">SCHOOL ID</span>
               </h2>
-              <p className="text-[11px] sm:text-xs md:text-sm text-slate-600 dark:text-slate-300 mt-2 sm:mt-2.5 max-w-md font-medium leading-relaxed drop-shadow-sm px-2">
-                Present your official <span className="text-orange-600 dark:text-orange-300 font-bold">3" × 2" QR Badge</span> or tap your <span className="text-blue-600 dark:text-blue-300 font-bold">RFID Card</span> in front of the scanner reader to log campus attendance.
-              </p>
 
-              {/* Plug & Play Hardware Indicator */}
-              <div className="mt-3 sm:mt-4 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-slate-100 dark:bg-darkbg-950/90 border border-slate-200 dark:border-slate-800 text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2 shadow-inner max-w-full truncate">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 flex-shrink-0" />
-                <span className="truncate">Handheld Laser Barcode & 2D QR Scanner Active</span>
-              </div>
-
-              {/* Action Buttons - Fully adaptive layout */}
-              <div className="mt-5 sm:mt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-3 w-full">
+              {/* Action Buttons: Open Camera & Enter ID */}
+              <div className="mt-5 sm:mt-6 flex flex-col xs:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-sm px-2">
                 <button
                   onClick={onOpenCamera}
-                  className="flex-1 xs:flex-none flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black transition-all shadow-lg shadow-blue-500/25 active:scale-95 hover:scale-[1.02]"
+                  className="w-full xs:w-auto flex-1 flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-extrabold tracking-wide transition-all shadow-lg shadow-blue-500/25 active:scale-95 hover:scale-[1.02] border border-blue-400/30"
                 >
-                  <Camera className="w-4 h-4" />
+                  <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span>Open Camera</span>
                 </button>
 
                 <button
                   onClick={onOpenManual}
-                  className="flex-1 xs:flex-none flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-darkbg-850 dark:hover:bg-darkbg-800 dark:text-slate-200 text-xs font-bold border border-slate-300 dark:border-slate-700/80 transition shadow-sm active:scale-95 hover:scale-[1.02]"
+                  className="w-full xs:w-auto flex-1 flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 dark:bg-darkbg-850 dark:hover:bg-darkbg-800 dark:text-white text-xs sm:text-sm font-extrabold tracking-wide border border-slate-300 dark:border-slate-700/80 transition-all shadow-md active:scale-95 hover:scale-[1.02]"
                 >
-                  <Keyboard className="w-4 h-4" />
+                  <Keyboard className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-400" />
                   <span>Enter ID</span>
                 </button>
-
-                {soundEnabled && (
-                  <button
-                    onClick={() => {
-                      playSuccessChime();
-                      speakGreeting('Main gate audio verified.');
-                    }}
-                    title="Play audio test chime and greeting"
-                    className="flex-1 xs:flex-none flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2.5 rounded-2xl bg-slate-100 hover:bg-orange-50 text-orange-600 dark:bg-darkbg-950/90 dark:hover:bg-orange-950/30 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 border border-slate-300 dark:border-slate-800 hover:border-orange-500/40 text-xs font-bold transition shadow-sm active:scale-95"
-                  >
-                    <Volume2 className="w-4 h-4" />
-                    <span>Test Audio</span>
-                  </button>
-                )}
               </div>
             </div>
           )}
