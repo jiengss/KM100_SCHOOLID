@@ -106,35 +106,37 @@ export default function ConfirmationModal({
 
           {/* Optional Item Details Card (e.g. Student / Admin details) */}
           {itemDetails && (
-            <div className="w-full mt-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex items-center gap-3 text-left shadow-inner">
+            <div className="w-full mt-4 p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center shadow-inner gap-2">
               {itemDetails.image && (
                 <img
                   src={itemDetails.image}
                   alt={itemDetails.title}
-                  className="w-11 h-11 rounded-xl object-cover border border-slate-200 dark:border-slate-700 flex-shrink-0 bg-slate-100 dark:bg-slate-800"
+                  className="w-12 h-12 rounded-xl object-cover border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm"
                 />
               )}
-              <div className="min-w-0 flex-1">
-                <div className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate">
-                  {itemDetails.title}
+              <div className="flex flex-col items-center justify-center text-center w-full">
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base leading-snug">
+                    {itemDetails.title}
+                  </span>
+                  {itemDetails.tag && (
+                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider border shadow-sm ${
+                      itemDetails.tagColor === 'amber'
+                        ? 'bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-400'
+                        : itemDetails.tagColor === 'emerald'
+                        ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:text-emerald-400'
+                        : 'bg-blue-500/10 text-blue-600 border-blue-500/30 dark:text-blue-400'
+                    }`}>
+                      {itemDetails.tag}
+                    </span>
+                  )}
                 </div>
                 {itemDetails.subtitle && (
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">
                     {itemDetails.subtitle}
                   </div>
                 )}
               </div>
-              {itemDetails.tag && (
-                <span className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider flex-shrink-0 border ${
-                  itemDetails.tagColor === 'amber'
-                    ? 'bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-400'
-                    : itemDetails.tagColor === 'emerald'
-                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:text-emerald-400'
-                    : 'bg-blue-500/10 text-blue-600 border-blue-500/30 dark:text-blue-400'
-                }`}>
-                  {itemDetails.tag}
-                </span>
-              )}
             </div>
           )}
 
