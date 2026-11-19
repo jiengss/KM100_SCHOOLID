@@ -19,7 +19,7 @@ export default function App() {
   const [currentPortal, setCurrentPortal] = useState('gate');
   // Admin sub-navigation: 'dashboard', 'attendance', 'students'
   const [adminTab, setAdminTab] = useState('dashboard');
-  
+
   // Administrator Auth State
   const [currentUser, setCurrentUser] = useState(() => adminAuthService.getCurrentUser());
   const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
@@ -46,7 +46,7 @@ export default function App() {
 
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [scanMode, setScanMode] = useState('AUTO'); // 'AUTO', 'IN', 'OUT'
-  
+
   // Data States
   const [students, setStudents] = useState([]);
   const [logs, setLogs] = useState([]);
@@ -73,12 +73,12 @@ export default function App() {
     if (!isGateFullscreen) {
       setIsGateFullscreen(true);
       if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
+        document.documentElement.requestFullscreen().catch(() => { });
       }
     } else {
       setIsGateFullscreen(false);
       if (document.exitFullscreen && document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
+        document.exitFullscreen().catch(() => { });
       }
     }
   };
@@ -169,7 +169,7 @@ export default function App() {
     const newLog = await dbService.recordAttendance({
       student,
       logType: determinedType,
-      gate: 'Main Gate Kiosk',
+      gate: 'Main Gate',
       remarks: 'Normal'
     });
 
@@ -371,7 +371,7 @@ export default function App() {
       {/* Footer (Hidden in Fullscreen Gate TV Display) */}
       {!isGateFullscreen && (
         <footer className="border-t border-slate-200 dark:border-slate-900 bg-white/80 dark:bg-slate-950/80 py-3 px-6 text-xs text-slate-500 dark:text-slate-400 no-print flex items-center justify-between transition-colors">
-          <span>KM100 School ID Scanner & Attendance Verification System • Built with React & Supabase</span>
+          <span>KM100 School ID Scanner & Attendance Verification System • KM100 Skills and Training Center, Inc.</span>
           <button
             onClick={() => setIsSupabaseModalOpen(true)}
             className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition text-[11px]"

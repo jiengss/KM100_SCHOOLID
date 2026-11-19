@@ -338,7 +338,7 @@ export default function AdminDashboard({
               <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">Today's Timeline</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
-              Distribution of student admissions and exits through the turnstiles
+              Distribution of student admissions and exits through the main gate
             </p>
           </div>
 
@@ -368,7 +368,7 @@ export default function AdminDashboard({
             <span className="flex items-center gap-1.5 font-medium">
               <span className="w-2.5 h-2.5 rounded-sm bg-orange-500 flex-shrink-0" /> Peak Morning Rush: <strong className="text-slate-800 dark:text-slate-200">07:00 AM - 08:30 AM</strong>
             </span>
-            <span className="font-mono text-orange-600 dark:text-orange-300 font-bold">Turnstile Flow OK</span>
+            <span className="font-mono text-orange-600 dark:text-orange-300 font-bold">Main Gate Flow OK</span>
           </div>
         </div>
 

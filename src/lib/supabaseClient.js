@@ -163,7 +163,7 @@ export const dbService = {
     return studentLogs[0] || null;
   },
 
-  async recordAttendance({ student, logType, gate = 'Main Gate Kiosk', remarks = 'Normal' }) {
+  async recordAttendance({ student, logType, gate = 'Main Gate', remarks = 'Normal' }) {
     const timestamp = new Date().toISOString();
     const logEntry = {
       id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,

@@ -53,7 +53,7 @@ export default function AttendanceLogView({ logs, students }) {
         log.school_id,
         student ? `"${student.first_name} ${student.last_name}"` : 'Unknown',
         student ? `"${student.course_strand || 'General'}"` : '',
-        `"${log.gate_station || 'Main Gate Kiosk'}"`,
+        `"${log.gate_station || 'Main Gate'}"`,
         `"${log.remarks || 'Normal'}"`
       ];
     });
@@ -270,7 +270,7 @@ export default function AttendanceLogView({ logs, students }) {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
-                        {log.gate_station || 'Main Gate Kiosk'}
+                        {log.gate_station || 'Main Gate'}
                       </td>
                       <td className="py-3 px-4">
                         <span className="text-slate-500 dark:text-slate-400">

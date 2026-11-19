@@ -45,7 +45,7 @@ export default function KioskDisplay({
 }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [countdown, setCountdown] = useState(5);
-  const [selectedGate, setSelectedGate] = useState('Main Gate - Entrance Turnstile');
+  const [selectedGate, setSelectedGate] = useState('Main Gate');
 
   // Live Clock
   useEffect(() => {
@@ -134,10 +134,10 @@ export default function KioskDisplay({
               <h1 className="text-xs sm:text-base md:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight uppercase truncate">
                 KM100 Skills and Training Center, Inc.
               </h1>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-[9px] sm:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm flex-shrink-0">
+              {/* <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-[9px] sm:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm flex-shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
                 GATE ONLINE
-              </span>
+              </span> */}
             </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
@@ -148,10 +148,7 @@ export default function KioskDisplay({
                   onChange={(e) => setSelectedGate(e.target.value)}
                   className="w-full appearance-none bg-slate-100 dark:bg-darkbg-950/80 border border-slate-300 dark:border-slate-700/80 hover:border-orange-500/50 text-slate-800 dark:text-orange-300 text-[11px] sm:text-xs rounded-xl pl-2.5 sm:pl-3 pr-6 sm:pr-7 py-0.5 sm:py-1 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer shadow-inner transition truncate"
                 >
-                  <option value="Main Gate - Entrance Turnstile">Main Gate - Entrance Turnstile</option>
-                  <option value="Main Gate - Pedestrian Lane">Main Gate - Pedestrian Lane</option>
-                  <option value="Gate 2 - Senior High Entrance">Gate 2 - Senior High Entrance</option>
-                  <option value="Campus Exit Gate">Campus Exit Gate</option>
+                  <option value="Main Gate">Main Gate</option>
                 </select>
                 <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
