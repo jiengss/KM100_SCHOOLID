@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ConfirmationModal from './ConfirmationModal';
 import { 
   Users, 
   ClipboardList, 
@@ -32,6 +33,8 @@ export default function Navbar({
   theme = 'dark',
   onToggleTheme
 }) {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
   const handleToggleSound = () => {
     const nextState = !soundEnabled;
     setSoundEnabled(nextState);
@@ -217,7 +220,7 @@ export default function Navbar({
                 )}
 
                 <button
-                  onClick={onLogout}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-300 border border-red-500/25 text-xs font-bold transition active:scale-95"
                   title="Sign Out from Admin Suite"
                 >
@@ -283,6 +286,28 @@ export default function Navbar({
           </div>
         )}
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          onLogout();
+        }}
+        title="Confirm Sign Out"
+        message="Are you sure you want to sign out of the administrator portal? Any active administrative sessions will end and you will be returned to the Public Gate Kiosk."
+        itemDetails={currentUser ? {
+          title: currentUser.full_name || 'School Administrator',
+          subtitle: currentUser.email || 'admin@km100.edu.ph',
+          tag: currentUser.role === 'super_admin' ? 'Super Admin' : 'Admin',
+          tagColor: 'amber'
+        } : null}
+        confirmText="Sign Out"
+        cancelText="Stay Signed In"
+        variant="danger"
+        icon={LogOut}
+      />
     </header>
   );
 }

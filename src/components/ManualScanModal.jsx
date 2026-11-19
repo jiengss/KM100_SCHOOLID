@@ -8,7 +8,7 @@ export default function ManualScanModal({ isOpen, onClose, onScan, sampleStudent
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (inputValue.trim()) {
+    if (inputValue.trim()) { 
       onScan(inputValue.trim());
       setInputValue('');
       onClose();

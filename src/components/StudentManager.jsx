@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ConfirmationModal from './ConfirmationModal';
 import { 
   Users, 
   UserPlus, 
@@ -28,6 +29,8 @@ export default function StudentManager({
   const [selectedCourse, setSelectedCourse] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -88,9 +91,16 @@ export default function StudentManager({
     setIsModalOpen(false);
   };
 
-  const handleDelete = (id, name) => {
-    if (window.confirm(`Are you sure you want to delete student "${name}"?`)) {
-      onDeleteStudent(id);
+  const handleConfirmDelete = async () => {
+    if (!studentToDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDeleteStudent(studentToDelete.id);
+      setStudentToDelete(null);
+    } catch (err) {
+      alert("Failed to delete student: " + (err.message || err));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -243,8 +253,8 @@ export default function StudentManager({
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(student.id, `${student.first_name} ${student.last_name}`)}
-                          title="Delete Student"
+                          onClick={() => setStudentToDelete(student)}
+                          title="Delete Student Record"
                           className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition active:scale-95"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -435,6 +445,27 @@ export default function StudentManager({
           </div>
         </div>
       )}
+
+      {/* Delete Student Action Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!studentToDelete}
+        onClose={() => !isDeleting && setStudentToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
+        title="Delete Student Record"
+        message="Are you sure you want to permanently delete this student record? Their campus gate admission privileges and barcode credentials will be immediately revoked."
+        itemDetails={studentToDelete ? {
+          title: `${studentToDelete.first_name} ${studentToDelete.middle_name ? studentToDelete.middle_name + ' ' : ''}${studentToDelete.last_name}`,
+          subtitle: `${studentToDelete.grade_level} • ${studentToDelete.section} • ${studentToDelete.course_strand || 'NC II Technology'}`,
+          image: studentToDelete.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
+          tag: `ID: ${studentToDelete.school_id}`,
+          tagColor: 'blue'
+        } : null}
+        confirmText="Delete Student"
+        cancelText="Keep Record"
+        variant="danger"
+        icon={Trash2}
+      />
     </div>
   );
 }

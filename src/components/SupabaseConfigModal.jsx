@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ConfirmationModal from './ConfirmationModal';
 import { 
   Database, 
   X, 
@@ -128,6 +129,7 @@ export default function SupabaseConfigModal({ isOpen, onClose, onConfigSaved }) 
   const [testing, setTesting] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState('credentials'); // credentials, sql
   const [copied, setCopied] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   if (!isOpen) return null;
 
@@ -275,7 +277,7 @@ export default function SupabaseConfigModal({ isOpen, onClose, onConfigSaved }) 
 
                 <button
                   type="button"
-                  onClick={handleResetToDemo}
+                  onClick={() => setShowResetConfirm(true)}
                   className="text-xs text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
                 >
                   Use Built-in Local Demo
@@ -322,6 +324,22 @@ export default function SupabaseConfigModal({ isOpen, onClose, onConfigSaved }) 
           </button>
         </div>
       </div>
+
+      {/* Switch to Local Demo Confirmation */}
+      <ConfirmationModal
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={() => {
+          setShowResetConfirm(false);
+          handleResetToDemo();
+        }}
+        title="Reset to Built-in Demo"
+        message="Are you sure you want to clear your current Supabase credentials and switch to the offline local demo dataset? Live database synchronization will be paused."
+        confirmText="Reset to Demo"
+        cancelText="Cancel"
+        variant="warning"
+        icon={Server}
+      />
     </div>
   );
 }
