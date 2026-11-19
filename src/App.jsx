@@ -9,9 +9,10 @@ import ManualScanModal from './components/ManualScanModal';
 import StudentIdCardModal from './components/StudentIdCardModal';
 import SupabaseConfigModal from './components/SupabaseConfigModal';
 import AdminAuthModal from './components/AdminAuthModal';
+import ConfirmationModal from './components/ConfirmationModal';
 import { useBarcodeScanner } from './hooks/useBarcodeScanner';
 import { dbService, getStoredSupabaseConfig, adminAuthService } from './lib/supabaseClient';
-import { Shield, Lock } from 'lucide-react';
+import { Shield, Lock, LogOut } from 'lucide-react';
 
 export default function App() {
   // Portal separation: 'gate' (Main Gate Entrance Screen) vs 'admin' (Admin Suite)
@@ -88,6 +89,7 @@ export default function App() {
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [selectedStudentForCard, setSelectedStudentForCard] = useState(null);
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
 
   // Authentication Handlers
   const handleAuthSuccess = (user) => {
@@ -235,7 +237,7 @@ export default function App() {
           onToggleFullscreen={handleToggleFullscreen}
           currentUser={currentUser}
           onOpenAdminLogin={handleOpenAdminLogin}
-          onLogout={handleLogout}
+          onLogout={() => setIsLogoutConfirmOpen(true)}
           theme={theme}
           onToggleTheme={handleToggleTheme}
         />
@@ -412,6 +414,28 @@ export default function App() {
         isOpen={isAdminAuthModalOpen}
         onClose={() => setIsAdminAuthModalOpen(false)}
         onAuthSuccess={handleAuthSuccess}
+      />
+
+      {/* Logout Confirmation Modal (Mounted at root for 100% viewport centering) */}
+      <ConfirmationModal
+        isOpen={isLogoutConfirmOpen}
+        onClose={() => setIsLogoutConfirmOpen(false)}
+        onConfirm={() => {
+          setIsLogoutConfirmOpen(false);
+          handleLogout();
+        }}
+        title="Confirm Sign Out"
+        message="Are you sure you want to sign out of the administrator portal? Any active administrative sessions will end and you will be returned to the Public Gate Kiosk."
+        itemDetails={currentUser ? {
+          title: currentUser.full_name || 'School Administrator',
+          subtitle: currentUser.email || 'admin@km100.edu.ph',
+          tag: currentUser.role === 'super_admin' ? 'Super Admin' : 'Admin',
+          tagColor: 'amber'
+        } : null}
+        confirmText="Sign Out"
+        cancelText="Stay Signed In"
+        variant="danger"
+        icon={LogOut}
       />
     </div>
   );

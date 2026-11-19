@@ -61,13 +61,13 @@ export default function ConfirmationModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 dark:bg-black/85 backdrop-blur-md animate-fade-in touch-scroll"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto bg-black/75 dark:bg-black/85 backdrop-blur-md animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isLoading) onClose();
       }}
     >
       <div 
-        className={`relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl ${variantStyles.glow} flex flex-col max-h-[92vh] animate-scale-in transition-all`}
+        className={`relative w-full max-w-md m-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl ${variantStyles.glow} flex flex-col max-h-[92vh] animate-scale-in transition-all`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirmation-modal-title"
