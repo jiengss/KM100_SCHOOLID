@@ -82,12 +82,26 @@ ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attendance_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Public students read access" ON public.students;
 CREATE POLICY "Public students read access" ON public.students FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public students insert/update" ON public.students;
 CREATE POLICY "Public students insert/update" ON public.students FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Public attendance read access" ON public.attendance_logs;
 CREATE POLICY "Public attendance read access" ON public.attendance_logs FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public attendance insert access" ON public.attendance_logs;
 CREATE POLICY "Public attendance insert access" ON public.attendance_logs FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public admin read access" ON public.admin_users;
 CREATE POLICY "Public admin read access" ON public.admin_users FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public admin registration" ON public.admin_users;
+DROP POLICY IF EXISTS "Public admin insert registration" ON public.admin_users;
 CREATE POLICY "Public admin registration" ON public.admin_users FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public admin update access" ON public.admin_users;
 CREATE POLICY "Public admin update access" ON public.admin_users FOR UPDATE USING (true);
 
 -- 5. Enable Real-Time
