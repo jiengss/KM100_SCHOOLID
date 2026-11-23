@@ -113,6 +113,9 @@ export default function App() {
       const config = getStoredSupabaseConfig();
       setIsSupabaseConfigured(!!(config.url && config.anonKey));
 
+      // Ensure all legacy mock data is purged across storage and cloud
+      await dbService.purgeMockData();
+
       const [loadedStudents, loadedLogs] = await Promise.all([
         dbService.getStudents(),
         dbService.getRecentLogs(50)

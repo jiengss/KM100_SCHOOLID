@@ -119,6 +119,11 @@ INSERT INTO public.admin_users (email, password_hash, full_name, role, status)
 VALUES
     ('admin@km100.edu.ph', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'KM100 Head Administrator', 'super_admin', 'ACTIVE')
 ON CONFLICT (email) DO NOTHING;
+
+-- 7. Purge Any Legacy Demo Mock Students and Mock Logs
+DELETE FROM public.attendance_logs WHERE school_id LIKE '2024-1000%';
+DELETE FROM public.students WHERE school_id LIKE '2024-1000%';
+DELETE FROM public.students WHERE first_name IN ('Sophia', 'Alexander', 'Isabella', 'Marcus', 'Chloe', 'Gabriel', 'Jasmine');
 `;
 
 export default function SupabaseConfigModal({ isOpen, onClose, onConfigSaved }) {
@@ -288,7 +293,7 @@ export default function SupabaseConfigModal({ isOpen, onClose, onConfigSaved }) 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-slate-600 dark:text-slate-400">
-                  Run this script once in your <strong>Supabase Dashboard &gt; SQL Editor</strong> to create tables, indexes, and sample students:
+                  Run this script once in your <strong>Supabase Dashboard &gt; SQL Editor</strong> to create clean tables and indexes:
                 </p>
                 <button
                   onClick={handleCopySql}

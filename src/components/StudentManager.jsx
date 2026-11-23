@@ -332,7 +332,7 @@ export default function StudentManager({
                     required
                     value={formData.school_id}
                     onChange={(e) => setFormData({ ...formData, school_id: e.target.value })}
-                    placeholder="e.g. 2024-10009"
+                    placeholder="e.g. 2025-00101"
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>

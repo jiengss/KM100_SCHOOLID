@@ -25,6 +25,18 @@ export function saveStoredSupabaseConfig(url, anonKey) {
 const LOCAL_STUDENTS_KEY = 'km100_local_students';
 const LOCAL_LOGS_KEY = 'km100_local_attendance_logs';
 
+const MOCK_NAMES = ['sophia', 'alexander', 'isabella', 'marcus', 'chloe', 'gabriel', 'jasmine'];
+
+export function isMockStudent(s) {
+  if (!s) return false;
+  const schoolId = (s.school_id || '').toLowerCase();
+  const firstName = (s.first_name || '').toLowerCase();
+  const lastName = (s.last_name || '').toLowerCase();
+  return schoolId.startsWith('2024-1000') ||
+         schoolId.startsWith('rfid-9910') ||
+         (MOCK_NAMES.includes(firstName) && ['rodriguez', 'chen', 'santos', 'johnson', 'taylor', 'velasco', 'flores'].includes(lastName));
+}
+
 function getLocalStudents() {
   const data = localStorage.getItem(LOCAL_STUDENTS_KEY);
   if (!data) {
@@ -33,8 +45,8 @@ function getLocalStudents() {
   try {
     const parsed = JSON.parse(data);
     if (!Array.isArray(parsed)) return [];
-    // Automatically purge legacy mock students (Sophia, Alexander, etc. with 2024-1000X)
-    const cleaned = parsed.filter(s => s && s.school_id && !s.school_id.startsWith('2024-1000'));
+    // Automatically purge all legacy mock students
+    const cleaned = parsed.filter(s => !isMockStudent(s));
     if (cleaned.length !== parsed.length) {
       localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(cleaned));
     }
@@ -45,7 +57,8 @@ function getLocalStudents() {
 }
 
 function saveLocalStudents(students) {
-  localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(students || []));
+  const cleaned = (students || []).filter(s => !isMockStudent(s));
+  localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(cleaned));
 }
 
 function getLocalLogs() {
@@ -68,7 +81,8 @@ function getLocalLogs() {
 }
 
 function saveLocalLogs(logs) {
-  localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(logs || []));
+  const cleaned = (logs || []).filter(l => l && l.school_id && !l.school_id.startsWith('2024-1000'));
+  localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(cleaned));
 }
 
 let supabaseInstance = null;
@@ -103,6 +117,28 @@ export const dbService = {
     }
   },
 
+  async purgeMockData() {
+    // 1. Purge from localStorage
+    const localStudents = getLocalStudents().filter(s => !isMockStudent(s));
+    saveLocalStudents(localStudents);
+    const localLogs = getLocalLogs().filter(l => l && !l.school_id?.startsWith('2024-1000'));
+    saveLocalLogs(localLogs);
+
+    // 2. Purge from Supabase if connected
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        await sb.from('attendance_logs').delete().like('school_id', '2024-1000%');
+        await sb.from('students').delete().like('school_id', '2024-1000%');
+        for (const name of ['Sophia', 'Alexander', 'Isabella', 'Marcus', 'Chloe', 'Gabriel', 'Jasmine']) {
+          await sb.from('students').delete().eq('first_name', name);
+        }
+      } catch (err) {
+        console.warn("Purge mock data from Supabase:", err);
+      }
+    }
+  },
+
   async getStudents() {
     const sb = getSupabase();
     if (sb) {
@@ -112,8 +148,17 @@ export const dbService = {
           .select('*')
           .order('created_at', { ascending: false });
         if (!error && Array.isArray(data)) {
-          saveLocalStudents(data);
-          return data;
+          // Identify any legacy mock records from prior seed runs
+          const mockFound = data.filter(s => isMockStudent(s));
+          if (mockFound.length > 0) {
+            sb.from('students').delete().like('school_id', '2024-1000%').then(() => {}).catch(() => {});
+            for (const name of ['Sophia', 'Alexander', 'Isabella', 'Marcus', 'Chloe', 'Gabriel', 'Jasmine']) {
+              sb.from('students').delete().eq('first_name', name).then(() => {}).catch(() => {});
+            }
+          }
+          const cleaned = data.filter(s => !isMockStudent(s));
+          saveLocalStudents(cleaned);
+          return cleaned;
         }
       } catch (err) {
         console.warn("Supabase fetch students failed, using local storage:", err);
@@ -226,7 +271,12 @@ export const dbService = {
           .order('timestamp', { ascending: false })
           .limit(limit);
         if (!error && data) {
-          return data;
+          const mockFound = data.filter(l => l && l.school_id && l.school_id.startsWith('2024-1000'));
+          if (mockFound.length > 0) {
+            sb.from('attendance_logs').delete().like('school_id', '2024-1000%').then(() => {}).catch(() => {});
+          }
+          const cleaned = data.filter(l => l && l.school_id && !l.school_id.startsWith('2024-1000'));
+          return cleaned;
         }
       } catch (err) {
         console.warn("Supabase getRecentLogs failed, using local:", err);

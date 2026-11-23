@@ -49,7 +49,7 @@ export default function ManualScanModal({ isOpen, onClose, onScan, sampleStudent
                 autoFocus
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="e.g. 2024-10001 or RFID-99101"
+                placeholder="Enter Student ID or tap RFID card..."
                 className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 focus:border-blue-500 rounded-xl pl-3.5 sm:pl-4 pr-20 py-2.5 sm:py-3 text-sm sm:text-base font-mono font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition shadow-inner"
               />
               <button

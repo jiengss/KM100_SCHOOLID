@@ -131,3 +131,9 @@ VALUES
     ('admin@km100.edu.ph', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'KM100 Head Administrator', 'super_admin', 'ACTIVE')
 ON CONFLICT (email) DO NOTHING;
 
+-- 9. Purge Any Legacy Demo Mock Students and Mock Logs
+DELETE FROM public.attendance_logs WHERE school_id LIKE '2024-1000%';
+DELETE FROM public.students WHERE school_id LIKE '2024-1000%';
+DELETE FROM public.students WHERE first_name IN ('Sophia', 'Alexander', 'Isabella', 'Marcus', 'Chloe', 'Gabriel', 'Jasmine');
+
+
