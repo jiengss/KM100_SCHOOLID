@@ -36,7 +36,8 @@ export async function convertToInlineData(imageSource) {
   // If it's a Canvas element
   if (typeof HTMLCanvasElement !== 'undefined' && imageSource instanceof HTMLCanvasElement) {
     const dataUrl = imageSource.toDataURL('image/jpeg', 0.9);
-    const base64Data = dataUrl.split(',')[1];
+    const commaIndex = dataUrl.indexOf(',');
+    const base64Data = commaIndex !== -1 ? dataUrl.substring(commaIndex + 1) : dataUrl;
     return { mimeType: 'image/jpeg', data: base64Data, dataUrl };
   }
 
@@ -45,24 +46,32 @@ export async function convertToInlineData(imageSource) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const result = reader.result;
-        const matches = result.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-        if (matches) {
-          resolve({ mimeType: matches[1], data: matches[2], dataUrl: result });
+        const result = String(reader.result || '');
+        const commaIndex = result.indexOf(',');
+        if (commaIndex !== -1) {
+          const header = result.substring(0, commaIndex);
+          const data = result.substring(commaIndex + 1);
+          const mimeMatch = header.match(/^data:([^;]+)/);
+          const mimeType = mimeMatch ? mimeMatch[1] : (imageSource.type || 'image/jpeg');
+          resolve({ mimeType, data, dataUrl: result });
         } else {
-          resolve({ mimeType: imageSource.type || 'image/jpeg', data: result.split(',')[1], dataUrl: result });
+          resolve({ mimeType: imageSource.type || 'image/jpeg', data: result, dataUrl: result });
         }
       };
-      reader.onerror = reject;
+      reader.onerror = (err) => reject(new Error('Failed to read file: ' + err));
       reader.readAsDataURL(imageSource);
     });
   }
 
   // If it's a Data URL string
   if (typeof imageSource === 'string' && imageSource.startsWith('data:')) {
-    const matches = imageSource.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-    if (matches) {
-      return { mimeType: matches[1], data: matches[2], dataUrl: imageSource };
+    const commaIndex = imageSource.indexOf(',');
+    if (commaIndex !== -1) {
+      const header = imageSource.substring(0, commaIndex);
+      const data = imageSource.substring(commaIndex + 1);
+      const mimeMatch = header.match(/^data:([^;]+)/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      return { mimeType, data, dataUrl: imageSource };
     }
   }
 
