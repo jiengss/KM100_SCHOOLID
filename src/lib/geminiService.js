@@ -96,25 +96,42 @@ export async function extractRegistrationFormWithGemini(imageSource, existingStu
 
   const { mimeType, data: base64Data, dataUrl } = await convertToInlineData(imageSource);
 
-  const promptText = `You are an AI document parser for KM100 Skills and Training Center, Inc.
-Analyze this uploaded student enrollment/registration form image (which may contain printed or handwritten text).
+  const promptText = `You are an expert AI document & registration form parser for KM100 Skills and Training Center, Inc.
+Carefully analyze this uploaded student enrollment/registration form image (which contains printed, typed, or handwritten text).
 
-Extract the following student fields and return strictly a valid JSON object matching this schema:
+Extract the following student fields with 100% precision:
+1. "school_id": Extracted School ID / Student ID (e.g. 2025-00101, 2026-00001, LRN) if visible, otherwise null.
+2. "first_name": The student's given / first name.
+   - CRITICAL: first_name must NEVER be empty if a given name appears on the document!
+   - If the name appears as "Surname, GivenName MiddleName" (e.g. "Hinoguin, Damos" or "Hinoguin, Juan Damos"):
+     * "Hinoguin, Damos" -> first_name: "Damos", last_name: "Hinoguin", middle_name: ""
+     * "Hinoguin, Juan Damos" -> first_name: "Juan", middle_name: "Damos", last_name: "Hinoguin"
+   - If the name is "First Middle Last" (e.g. "Damos Hinoguin"):
+     * "Damos Hinoguin" -> first_name: "Damos", middle_name: "", last_name: "Hinoguin"
+3. "middle_name": Middle name or middle initial (e.g. "Damos" or "B."). If only two name words exist, leave middle_name as empty string "".
+4. "last_name": Student's family name / surname / last name (e.g. "Hinoguin").
+5. "technology_course": The NC II course. Must be the closest match from:
+   - 'Computer Engineering Technology (NC II)'
+   - 'Hospitality Technology (NC II)'
+   - 'Electronics Engineering Technology (NC II)'
+   - 'Electrical Engineering Technology (NC II)'
+   - 'Tourism Technology (NC II)'
+   - 'Culinary Arts Technology (NC II)'
+   - 'Restaurant Operations Technology (NC II)'
+6. "emergency_contact_name": Parent, Guardian, Mother, Father, or emergency contact name found anywhere on the sheet.
+7. "emergency_contact_phone": Emergency contact phone / mobile number found anywhere on the sheet (e.g. 09171234567, +63 900 000 0000).
+
+Return strictly a valid JSON object matching this schema:
 {
-  "school_id": "Extracted School ID or Student ID (e.g. 2025-00101) if clearly visible on the form, otherwise null",
-  "first_name": "First name of the student",
-  "middle_name": "Middle name or middle initial of the student, or empty string if not found",
-  "last_name": "Last name / family name of the student",
-  "technology_course": "The NC II course. Must be the closest match from: 'Computer Engineering Technology (NC II)', 'Hospitality Technology (NC II)', 'Electronics Engineering Technology (NC II)', 'Electrical Engineering Technology (NC II)', 'Tourism Technology (NC II)', 'Culinary Arts Technology (NC II)', 'Restaurant Operations Technology (NC II)'",
-  "emergency_contact_name": "Parent / Guardian or emergency contact name, or empty string",
-  "emergency_contact_phone": "Emergency phone / mobile number, or empty string",
+  "school_id": "Extracted School ID or null",
+  "first_name": "First name",
+  "middle_name": "Middle name or empty string",
+  "last_name": "Last name",
+  "technology_course": "Exact matching NC II course",
+  "emergency_contact_name": "Parent / Guardian name or empty string",
+  "emergency_contact_phone": "Emergency phone or empty string",
   "confidence_score": 0.95
-}
-
-Important Rules:
-- If a field is not present or cannot be read, use an empty string "" (or null for school_id).
-- Clean up names (capitalize properly, remove labels like 'First Name:').
-- For technology_course, choose the most relevant of the 7 NC II courses listed above.`;
+}`;
 
   const payload = {
     contents: [
@@ -195,18 +212,56 @@ Important Rules:
     throw lastError || new Error("Failed to extract data using Gemini API.");
   }
 
+  // Smart name normalization:
+  let firstName = String(parsedJson.first_name || '').trim();
+  let middleName = String(parsedJson.middle_name || '').trim();
+  let lastName = String(parsedJson.last_name || '').trim();
+
+  // If first name is empty but middle name exists, middle name is the given name
+  if (!firstName && middleName) {
+    firstName = middleName;
+    middleName = '';
+  }
+
+  // If last name contains a comma (e.g. "Hinoguin, Damos" or "Hinoguin, Juan D.")
+  if (lastName.includes(',')) {
+    const parts = lastName.split(',').map(s => s.trim()).filter(Boolean);
+    lastName = parts[0] || '';
+    if (!firstName && parts[1]) {
+      const rest = parts[1].split(/\s+/).filter(Boolean);
+      firstName = rest[0] || '';
+      if (rest.length > 1 && !middleName) {
+        middleName = rest.slice(1).join(' ');
+      }
+    }
+  }
+
+  // If last name is empty and first name has multiple words (e.g. "Damos Hinoguin")
+  if (!lastName && firstName.includes(' ')) {
+    const tokens = firstName.split(/\s+/).filter(Boolean);
+    if (tokens.length >= 2) {
+      firstName = tokens[0];
+      lastName = tokens[tokens.length - 1];
+      if (tokens.length > 2 && !middleName) {
+        middleName = tokens.slice(1, -1).join(' ');
+      }
+    }
+  }
+
   // Normalize returned fields
   const finalCourse = matchTechnologyCourse(parsedJson.technology_course || parsedJson.course || COURSE_OPTIONS[0]);
 
   return {
     school_id: parsedJson.school_id || '',
-    first_name: parsedJson.first_name || '',
-    middle_name: parsedJson.middle_name || '',
-    last_name: parsedJson.last_name || '',
+    first_name: firstName,
+    middle_name: middleName,
+    last_name: lastName,
     course_strand: finalCourse,
-    emergency_contact_name: parsedJson.emergency_contact_name || '',
-    emergency_contact_phone: parsedJson.emergency_contact_phone || '',
+    emergency_contact_name: String(parsedJson.emergency_contact_name || '').trim(),
+    emergency_contact_phone: String(parsedJson.emergency_contact_phone || '').trim(),
     confidence_score: parsedJson.confidence_score || 0.95,
+    photo_url: dataUrl || '',
+    photo: dataUrl || '',
     dataUrl
   };
 }

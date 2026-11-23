@@ -114,7 +114,7 @@ export default function RegistrationFormScannerModal({
 
   // Extracted Student Form Data
   const [extractedData, setExtractedData] = useState(null);
-  const [useDocAsPhoto, setUseDocAsPhoto] = useState(false);
+  const [useDocAsPhoto, setUseDocAsPhoto] = useState(true);
   const [isSavingDirect, setIsSavingDirect] = useState(false);
   const [savedSuccessStudent, setSavedSuccessStudent] = useState(null);
   const [extractedByGemini, setExtractedByGemini] = useState(false);
@@ -257,7 +257,13 @@ Emergency Phone Number: +63 917 123 4567`;
           geminiResult.school_id = generateSmartSchoolId(existingStudents);
         }
 
+        // Ensure Photo URL is attached directly
+        if (!geminiResult.photo_url) {
+          geminiResult.photo_url = imgSrc;
+        }
+
         setExtractedData(geminiResult);
+        setUseDocAsPhoto(true);
         setExtractedByGemini(true);
         setIsProcessing(false);
         setProgressPercent(100);
@@ -288,9 +294,11 @@ Emergency Phone Number: +63 917 123 4567`;
         if (!parsed.course_strand) {
           parsed.course_strand = COURSE_OPTIONS[0];
         }
+        parsed.photo_url = imgSrc;
 
         setExtractedData(parsed);
-        setInfoNotice("Document loaded! Please review and confirm the student information below to save for School ID.");
+        setUseDocAsPhoto(true);
+        setInfoNotice("Document photo loaded! Please review and confirm the student information below to save for School ID.");
         setIsProcessing(false);
         setProgressPercent(100);
       }
@@ -304,7 +312,9 @@ Emergency Phone Number: +63 917 123 4567`;
       if (!fallbackParsed.course_strand) {
         fallbackParsed.course_strand = COURSE_OPTIONS[0];
       }
+      fallbackParsed.photo_url = previewImage || '';
       setExtractedData(fallbackParsed);
+      setUseDocAsPhoto(true);
       setInfoNotice("Document photo loaded! Please review and verify the student details below to save.");
       setIsProcessing(false);
     }
@@ -438,6 +448,8 @@ Emergency Phone Number: +63 917 123 4567`;
     setErrorMessage('');
 
     try {
+      const resolvedPhoto = extractedData.photo_url || previewImage || '';
+
       const studentPayload = {
         school_id: extractedData.school_id.trim(),
         first_name: extractedData.first_name.trim(),
@@ -448,7 +460,7 @@ Emergency Phone Number: +63 917 123 4567`;
         section: 'N/A',
         emergency_contact_name: extractedData.emergency_contact_name?.trim() || '',
         emergency_contact_phone: extractedData.emergency_contact_phone?.trim() || '',
-        photo_url: useDocAsPhoto && previewImage ? previewImage : (extractedData.photo_url || ''),
+        photo_url: resolvedPhoto,
         status: 'ACTIVE',
         blood_type: 'O+'
       };
@@ -478,6 +490,8 @@ Emergency Phone Number: +63 917 123 4567`;
   // Apply to full manual add modal
   const handleApplyToForm = () => {
     if (!extractedData) return;
+    const resolvedPhoto = extractedData.photo_url || previewImage || '';
+
     onApplyData({
       school_id: extractedData.school_id || generateSmartSchoolId(existingStudents),
       first_name: extractedData.first_name || '',
@@ -486,7 +500,7 @@ Emergency Phone Number: +63 917 123 4567`;
       course_strand: extractedData.course_strand || COURSE_OPTIONS[0],
       emergency_contact_name: extractedData.emergency_contact_name || '',
       emergency_contact_phone: extractedData.emergency_contact_phone || '',
-      photo_url: useDocAsPhoto && previewImage ? previewImage : (extractedData.photo_url || '')
+      photo_url: resolvedPhoto
     });
     onClose();
   };
@@ -502,7 +516,7 @@ Emergency Phone Number: +63 917 123 4567`;
     setProgressPercent(0);
     setProgressStatus('');
     setSavedSuccessStudent(null);
-    setUseDocAsPhoto(false);
+    setUseDocAsPhoto(true);
     setExtractedByGemini(false);
     setGdriveInputUrl('');
   };

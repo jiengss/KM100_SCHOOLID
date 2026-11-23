@@ -174,7 +174,7 @@ export function detectHeaderRowIndex(rows2D) {
       }
     }
 
-    if (score > maxScore) {
+    if (score >= maxScore) {
       maxScore = score;
       bestRowIndex = r;
     }
@@ -252,18 +252,24 @@ export async function parseExcelStudentFile(fileInput, existingStudents = [], ta
 
     // Helper to get value by fuzzy column keys
     const getVal = (...keys) => {
+      // Pass 1: Exact matches first
       for (const k of keys) {
         const cleanK = k.toLowerCase().replace(/[\s_\.\-\/\#\(\)]/g, '');
-        // Exact normalized match
         if (colIndexMap[cleanK] !== undefined) {
           const val = rowArray[colIndexMap[cleanK]];
           if (val !== undefined && val !== null && cleanStr(val) !== '') {
             return cleanStr(val);
           }
         }
-        // Substring match
+      }
+
+      // Pass 2: Clean substring match (only if key length >= 3 to avoid false positive collisions)
+      for (const k of keys) {
+        const cleanK = k.toLowerCase().replace(/[\s_\.\-\/\#\(\)]/g, '');
+        if (cleanK.length < 3) continue;
+
         for (const [colName, colIdx] of Object.entries(colIndexMap)) {
-          if (colName.includes(cleanK) || cleanK.includes(colName)) {
+          if (colName.includes(cleanK)) {
             const val = rowArray[colIdx];
             if (val !== undefined && val !== null && cleanStr(val) !== '') {
               return cleanStr(val);
@@ -315,6 +321,36 @@ export async function parseExcelStudentFile(fileInput, existingStudents = [], ta
       firstName = toTitleCase(firstName);
       middleName = toTitleCase(middleName);
       lastName = toTitleCase(lastName);
+    }
+
+    // Smart Name Correction: Never leave firstName empty if middleName was parsed
+    if (!firstName && middleName) {
+      firstName = middleName;
+      middleName = '';
+    }
+
+    if (lastName.includes(',')) {
+      const parts = lastName.split(',').map(p => cleanStr(p)).filter(Boolean);
+      lastName = toTitleCase(parts[0]);
+      if (!firstName && parts[1]) {
+        const tokens = parts[1].split(/\s+/).filter(Boolean);
+        firstName = toTitleCase(tokens[0] || '');
+        if (tokens.length > 1 && !middleName) {
+          middleName = toTitleCase(tokens.slice(1).join(' '));
+        }
+      }
+    }
+
+    // If lastName is empty and firstName has two words
+    if (!lastName && firstName.includes(' ')) {
+      const tokens = firstName.split(/\s+/).filter(Boolean);
+      if (tokens.length >= 2) {
+        firstName = tokens[0];
+        lastName = tokens[tokens.length - 1];
+        if (tokens.length > 2 && !middleName) {
+          middleName = tokens.slice(1, -1).join(' ');
+        }
+      }
     }
 
     // Skip row if no student name could be found

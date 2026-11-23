@@ -131,6 +131,24 @@ export function parseRegistrationFormText(rawText) {
     }
   }
 
+  // Smart Name Normalization: never leave first_name empty if middle_name or last_name has given name
+  if (!result.first_name && result.middle_name) {
+    result.first_name = result.middle_name;
+    result.middle_name = '';
+  }
+
+  if (result.last_name && result.last_name.includes(',')) {
+    const parts = result.last_name.split(',').map(cleanVal).filter(Boolean);
+    result.last_name = parts[0] || '';
+    if (!result.first_name && parts[1]) {
+      const rest = parts[1].split(/\s+/).filter(Boolean);
+      result.first_name = rest[0] || '';
+      if (rest.length > 1 && !result.middle_name) {
+        result.middle_name = rest.slice(1).join(' ');
+      }
+    }
+  }
+
   // Technology Course
   const courseMatch = text.match(/(?:technology\s*course|tech\s*course|course(?:\s*strand)?|nc\s*ii\s*course|program)\s*[:=\-]\s*([^\n\r,;|]+)/i);
   if (courseMatch) {

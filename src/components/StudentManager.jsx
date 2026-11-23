@@ -150,12 +150,34 @@ export default function StudentManager({
     setFormScannedBanner(true);
     if (fileInputRef.current) fileInputRef.current.value = '';
 
+    let firstName = scannedData.first_name || '';
+    let middleName = scannedData.middle_name || '';
+    let lastName = scannedData.last_name || '';
+
+    // Safety: never leave First Name empty if Middle Name has value
+    if (!firstName && middleName) {
+      firstName = middleName;
+      middleName = '';
+    }
+
+    if (lastName.includes(',')) {
+      const parts = lastName.split(',').map(s => s.trim()).filter(Boolean);
+      lastName = parts[0] || '';
+      if (!firstName && parts[1]) {
+        const tokens = parts[1].split(/\s+/).filter(Boolean);
+        firstName = tokens[0] || '';
+        if (tokens.length > 1 && !middleName) {
+          middleName = tokens.slice(1).join(' ');
+        }
+      }
+    }
+
     setFormData({
       school_id: scannedData.school_id || '',
       rfid_uid: '',
-      first_name: scannedData.first_name || '',
-      middle_name: scannedData.middle_name || '',
-      last_name: scannedData.last_name || '',
+      first_name: firstName,
+      middle_name: middleName,
+      last_name: lastName,
       grade_level: 'N/A',
       section: 'N/A',
       course_strand: scannedData.course_strand || COURSE_OPTIONS[0],
