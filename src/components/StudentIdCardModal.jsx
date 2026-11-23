@@ -129,96 +129,23 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
       return;
     }
 
-    try {
-      // Collect all compiled stylesheets and Tailwind rules from main document
-      const headStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-        .map(el => el.outerHTML)
-        .join('\n');
+    // Add printing class to body so CSS media print isolates ONLY #printable-id-card
+    // This prints directly from the top-level DOM where all student images and logos
+    // are already loaded and rendered in memory, guaranteeing the photo is never blank!
+    document.body.classList.add('km100-printing-card');
 
-      // Create a clean, isolated printing iframe (avoids modal transform/fixed clipping)
-      let iframe = document.getElementById('km100-print-frame');
-      if (iframe) {
-        iframe.remove();
-      }
+    const cleanup = () => {
+      document.body.classList.remove('km100-printing-card');
+      window.removeEventListener('afterprint', cleanup);
+    };
 
-      iframe = document.createElement('iframe');
-      iframe.id = 'km100-print-frame';
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = 'none';
-      document.body.appendChild(iframe);
+    window.addEventListener('afterprint', cleanup);
 
-      const doc = iframe.contentWindow.document;
-      doc.open();
-      doc.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8" />
-            <title>KM100 School ID - ${student.school_id}</title>
-            ${headStyles}
-            <style>
-              @page {
-                size: 3in 2in;
-                margin: 0;
-              }
-              * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                box-sizing: border-box !important;
-              }
-              html, body {
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 3in !important;
-                height: 2in !important;
-                background: white !important;
-                overflow: hidden !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-              }
-              .print-isolated-card {
-                width: 3in !important;
-                height: 2in !important;
-                max-width: 3in !important;
-                max-height: 2in !important;
-                min-width: 3in !important;
-                min-height: 2in !important;
-                overflow: hidden !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                border-radius: 6px;
-                border: 1px solid #cbd5e1;
-                box-sizing: border-box !important;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="print-isolated-card bg-white text-slate-900 relative flex flex-col justify-between select-none">
-              ${cardElement.innerHTML}
-            </div>
-          </body>
-        </html>
-      `);
-      doc.close();
+    // Call native window print directly
+    window.print();
 
-      setTimeout(() => {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-        setTimeout(() => {
-          if (iframe && iframe.parentNode) {
-            iframe.parentNode.removeChild(iframe);
-          }
-        }, 3000);
-      }, 350);
-    } catch (err) {
-      console.error("Print iframe fallback:", err);
-      window.print();
-    }
+    // Safety timeout cleanup
+    setTimeout(cleanup, 3000);
   };
 
   return (
@@ -267,6 +194,8 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
                       src="/km100-logo.png"
                       alt="KM100 Logo"
                       className="w-full h-full object-contain rounded-full"
+                      loading="eager"
+                      decoding="sync"
                     />
                   </div>
                   <div className="min-w-0">
@@ -297,6 +226,12 @@ export default function StudentIdCardModal({ isOpen, onClose, student }) {
                         src={student.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300"}
                         alt={student.first_name}
                         className="w-full h-full object-cover"
+                        loading="eager"
+                        decoding="sync"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300";
+                        }}
                       />
                     </div>
                     <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white text-[7px] font-black uppercase px-1 py-0.2 rounded-full border border-white shadow-sm flex items-center gap-0.5">

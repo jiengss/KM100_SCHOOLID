@@ -157,11 +157,63 @@ html:not(.dark) ::-webkit-scrollbar-track {
     size: 3in 2in;
     margin: 0;
   }
+
+  html, body {
+    width: 3in !important;
+    height: 2in !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: hidden !important;
+  }
+
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+
   .no-print {
     display: none !important;
+  }
+
+  /* When printing card modal, hide everything except the ID card */
+  body.km100-printing-card *,
+  body:has(#printable-id-card) * {
+    visibility: hidden !important;
+  }
+
+  body.km100-printing-card #printable-id-card,
+  body.km100-printing-card #printable-id-card *,
+  body:has(#printable-id-card) #printable-id-card,
+  body:has(#printable-id-card) #printable-id-card * {
+    visibility: visible !important;
+  }
+
+  body.km100-printing-card #printable-id-card,
+  body:has(#printable-id-card) #printable-id-card {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 3in !important;
+    height: 2in !important;
+    max-width: 3in !important;
+    max-height: 2in !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    z-index: 99999999 !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #printable-id-card img {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    display: block !important;
+    max-width: 100% !important;
   }
 }
