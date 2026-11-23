@@ -4,6 +4,7 @@ import RegistrationFormScannerModal from './RegistrationFormScannerModal';
 import ExcelImportModal from './ExcelImportModal';
 import { exportStudentsToExcel } from '../lib/excelService';
 import { convertToGoogleDriveDirectImageUrl, isGoogleDriveUrl } from '../lib/driveHelper';
+import { generateSmartSchoolId, generateSmartRfidUid, isValidSchoolId } from '../lib/idGenerator';
 import { 
   Users, 
   UserPlus, 
@@ -172,9 +173,19 @@ export default function StudentManager({
       }
     }
 
+    let schoolId = scannedData.school_id?.trim() || '';
+    if (!isValidSchoolId(schoolId)) {
+      schoolId = generateSmartSchoolId(students);
+    }
+
+    let rfidUid = scannedData.rfid_uid?.trim() || '';
+    if (!rfidUid || rfidUid.length > 50) {
+      rfidUid = generateSmartRfidUid(students);
+    }
+
     setFormData({
-      school_id: scannedData.school_id || '',
-      rfid_uid: '',
+      school_id: schoolId,
+      rfid_uid: rfidUid,
       first_name: firstName,
       middle_name: middleName,
       last_name: lastName,
@@ -197,8 +208,8 @@ export default function StudentManager({
     setFormScannedBanner(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
     setFormData({
-      school_id: '',
-      rfid_uid: '',
+      school_id: generateSmartSchoolId(students),
+      rfid_uid: generateSmartRfidUid(students),
       first_name: '',
       middle_name: '',
       last_name: '',

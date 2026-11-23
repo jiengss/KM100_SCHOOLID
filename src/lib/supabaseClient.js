@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { INITIAL_STUDENTS, INITIAL_LOGS } from './mockData';
+import { generateSmartSchoolId, generateSmartRfidUid, isValidSchoolId } from './idGenerator';
 
 // Check localStorage first (in case user configured it via the UI), then Vite env
 const STORAGE_KEY_URL = 'km100_supabase_url';
@@ -286,20 +287,53 @@ export const dbService = {
   },
 
   async createStudent(rawStudentData) {
-    // Sanitize payload for Supabase PostgreSQL
+    const localList = getLocalStudents();
+
+    // 1. Sanitize School ID (prevent URLs like drive.google.com/open?id=... from failing varchar(50))
+    let schoolId = rawStudentData.school_id?.trim() || '';
+    let photoUrl = rawStudentData.photo_url?.trim() || null;
+
+    if (schoolId.startsWith('http://') || schoolId.startsWith('https://') || schoolId.includes('drive.google') || schoolId.includes('open?id=')) {
+      if (!photoUrl) {
+        photoUrl = schoolId;
+      }
+      schoolId = '';
+    }
+
+    if (!isValidSchoolId(schoolId)) {
+      schoolId = generateSmartSchoolId(localList);
+    }
+
+    // 2. Automatically create RFID UID if missing
+    let rfidUid = rawStudentData.rfid_uid?.trim() || null;
+    if (!rfidUid || rfidUid.length > 50) {
+      rfidUid = generateSmartRfidUid(localList);
+    }
+
+    // 3. Names
+    let firstName = rawStudentData.first_name?.trim() || '';
+    let middleName = rawStudentData.middle_name?.trim() || null;
+    let lastName = rawStudentData.last_name?.trim() || '';
+
+    if (!firstName && middleName) {
+      firstName = middleName;
+      middleName = null;
+    }
+
+    // Construct sanitized payload strictly conforming to Supabase schema limits
     const studentData = {
-      school_id: rawStudentData.school_id?.trim() || '',
-      rfid_uid: rawStudentData.rfid_uid?.trim() || null,
-      first_name: rawStudentData.first_name?.trim() || '',
-      middle_name: rawStudentData.middle_name?.trim() || null,
-      last_name: rawStudentData.last_name?.trim() || '',
+      school_id: schoolId.slice(0, 50),
+      rfid_uid: rfidUid ? rfidUid.slice(0, 50) : null,
+      first_name: firstName.slice(0, 100),
+      middle_name: middleName ? middleName.slice(0, 100) : null,
+      last_name: lastName.slice(0, 100),
       gender: rawStudentData.gender || 'Unspecified',
-      grade_level: rawStudentData.grade_level || 'N/A',
-      section: rawStudentData.section || 'N/A',
-      course_strand: rawStudentData.course_strand || 'General Technology (NC II)',
+      grade_level: (rawStudentData.grade_level || 'N/A').slice(0, 50),
+      section: (rawStudentData.section || 'N/A').slice(0, 50),
+      course_strand: rawStudentData.course_strand || 'Computer Engineering Technology (NC II)',
       email: rawStudentData.email?.trim() || null,
       contact_number: rawStudentData.contact_number?.trim() || null,
-      photo_url: rawStudentData.photo_url?.trim() || null,
+      photo_url: photoUrl,
       emergency_contact_name: rawStudentData.emergency_contact_name?.trim() || null,
       emergency_contact_phone: rawStudentData.emergency_contact_phone?.trim() || null,
       blood_type: rawStudentData.blood_type || 'Unknown',

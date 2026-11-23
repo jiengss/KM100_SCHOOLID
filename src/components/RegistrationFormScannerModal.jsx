@@ -32,6 +32,7 @@ import { parseRegistrationFormText } from '../lib/formParser';
 import { extractRegistrationFormWithGemini } from '../lib/geminiService';
 import { parseExcelStudentFile } from '../lib/excelService';
 import { convertToGoogleDriveDirectImageUrl, isGoogleDriveUrl } from '../lib/driveHelper';
+import { generateSmartSchoolId, generateSmartRfidUid, isValidSchoolId } from '../lib/idGenerator';
 import { Html5Qrcode } from 'html5-qrcode';
 
 // Canvas preprocessing helper to optimize image for Gemini Vision and prevent memory limits
@@ -79,21 +80,6 @@ function dataUrlToBlob(dataUrl) {
   }
 }
 
-// Generate an official unique School ID in the KM100 format: e.g. 2025-00105
-function generateSmartSchoolId(existingStudents = []) {
-  const year = new Date().getFullYear();
-  const count = (existingStudents?.length || 0) + 1;
-  const padded = String(count).padStart(5, '0');
-  let candidate = `${year}-${padded}`;
-
-  // Check collision
-  const existingIds = new Set(existingStudents?.map(s => s.school_id) || []);
-  if (existingIds.has(candidate)) {
-    const randomSuffix = Math.floor(10000 + Math.random() * 90000);
-    candidate = `${year}-${randomSuffix}`;
-  }
-  return candidate;
-}
 
 export default function RegistrationFormScannerModal({
   isOpen,
@@ -252,9 +238,14 @@ Emergency Phone Number: +63 917 123 4567`;
         setProgressStatus('Gemini AI successfully extracted student information...');
         setProgressPercent(95);
 
-        // Ensure School ID is populated
-        if (!geminiResult.school_id) {
+        // Ensure School ID is populated and valid (never a URL)
+        if (!geminiResult.school_id || !isValidSchoolId(geminiResult.school_id)) {
           geminiResult.school_id = generateSmartSchoolId(existingStudents);
+        }
+
+        // Ensure RFID UID is automatically assigned
+        if (!geminiResult.rfid_uid || geminiResult.rfid_uid.length > 50) {
+          geminiResult.rfid_uid = generateSmartRfidUid(existingStudents);
         }
 
         // Ensure Photo URL is attached directly
@@ -288,8 +279,11 @@ Emergency Phone Number: +63 917 123 4567`;
         }
 
         const parsed = parseRegistrationFormText(qrText || fileName);
-        if (!parsed.school_id) {
+        if (!parsed.school_id || !isValidSchoolId(parsed.school_id)) {
           parsed.school_id = generateSmartSchoolId(existingStudents);
+        }
+        if (!parsed.rfid_uid) {
+          parsed.rfid_uid = generateSmartRfidUid(existingStudents);
         }
         if (!parsed.course_strand) {
           parsed.course_strand = COURSE_OPTIONS[0];
@@ -306,8 +300,11 @@ Emergency Phone Number: +63 917 123 4567`;
       console.warn("Image file reading fallback:", err);
       // Even if file reader had a glitch, open review view with uploaded document if available
       const fallbackParsed = parseRegistrationFormText(fileName || '');
-      if (!fallbackParsed.school_id) {
+      if (!fallbackParsed.school_id || !isValidSchoolId(fallbackParsed.school_id)) {
         fallbackParsed.school_id = generateSmartSchoolId(existingStudents);
+      }
+      if (!fallbackParsed.rfid_uid) {
+        fallbackParsed.rfid_uid = generateSmartRfidUid(existingStudents);
       }
       if (!fallbackParsed.course_strand) {
         fallbackParsed.course_strand = COURSE_OPTIONS[0];
@@ -351,6 +348,21 @@ Emergency Phone Number: +63 917 123 4567`;
 
       setProgressStatus('Extracted student records from Excel...');
       setProgressPercent(90);
+
+      // Sanitize each student: ensure valid School ID (never a URL) and automatically create RFID UID
+      result.students.forEach((st, idx) => {
+        if (!isValidSchoolId(st.school_id)) {
+          if (st.school_id && (isGoogleDriveUrl(st.school_id) || st.school_id.startsWith('http'))) {
+            if (!st.photo_url) {
+              st.photo_url = isGoogleDriveUrl(st.school_id) ? convertToGoogleDriveDirectImageUrl(st.school_id, 800) : st.school_id;
+            }
+          }
+          st.school_id = generateSmartSchoolId(existingStudents, idx);
+        }
+        if (!st.rfid_uid || st.rfid_uid.length > 50) {
+          st.rfid_uid = generateSmartRfidUid(existingStudents, idx);
+        }
+      });
 
       setExcelStudentsList(result.students);
       setCurrentExcelStudentIndex(0);
@@ -450,8 +462,19 @@ Emergency Phone Number: +63 917 123 4567`;
     try {
       const resolvedPhoto = extractedData.photo_url || previewImage || '';
 
+      let cleanSchoolId = extractedData.school_id?.trim() || '';
+      if (!isValidSchoolId(cleanSchoolId)) {
+        cleanSchoolId = generateSmartSchoolId(existingStudents);
+      }
+
+      let cleanRfidUid = extractedData.rfid_uid?.trim() || '';
+      if (!cleanRfidUid || cleanRfidUid.length > 50) {
+        cleanRfidUid = generateSmartRfidUid(existingStudents);
+      }
+
       const studentPayload = {
-        school_id: extractedData.school_id.trim(),
+        school_id: cleanSchoolId,
+        rfid_uid: cleanRfidUid,
         first_name: extractedData.first_name.trim(),
         middle_name: extractedData.middle_name?.trim() || '',
         last_name: extractedData.last_name.trim(),
@@ -492,8 +515,19 @@ Emergency Phone Number: +63 917 123 4567`;
     if (!extractedData) return;
     const resolvedPhoto = extractedData.photo_url || previewImage || '';
 
+    let cleanSchoolId = extractedData.school_id?.trim() || '';
+    if (!isValidSchoolId(cleanSchoolId)) {
+      cleanSchoolId = generateSmartSchoolId(existingStudents);
+    }
+
+    let cleanRfidUid = extractedData.rfid_uid?.trim() || '';
+    if (!cleanRfidUid || cleanRfidUid.length > 50) {
+      cleanRfidUid = generateSmartRfidUid(existingStudents);
+    }
+
     onApplyData({
-      school_id: extractedData.school_id || generateSmartSchoolId(existingStudents),
+      school_id: cleanSchoolId,
+      rfid_uid: cleanRfidUid,
       first_name: extractedData.first_name || '',
       middle_name: extractedData.middle_name || '',
       last_name: extractedData.last_name || '',
@@ -1051,35 +1085,69 @@ Emergency Phone Number: +63 917 123 4567`;
 
                 {/* Form Fields Column (7 cols on desktop, or 12 if no preview) */}
                 <div className={`${previewImage ? 'lg:col-span-7' : 'lg:col-span-12'} p-4 rounded-2xl bg-slate-50 dark:bg-darkbg-950 border border-slate-200 dark:border-slate-800 space-y-3.5`}>
-                  {/* School ID Field */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Official School ID <span className="text-red-500">*</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setExtractedData({
-                          ...extractedData,
-                          school_id: generateSmartSchoolId(existingStudents)
-                        })}
-                        className="text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
-                        title="Generate a new sequential School ID"
-                      >
-                        <RefreshCw className="w-2.5 h-2.5" />
-                        <span>Regenerate ID</span>
-                      </button>
+                  {/* School ID & RFID UID Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {/* School ID Field */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          Official School ID <span className="text-red-500">*</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setExtractedData({
+                            ...extractedData,
+                            school_id: generateSmartSchoolId(existingStudents)
+                          })}
+                          className="text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
+                          title="Generate a new sequential School ID"
+                        >
+                          <RefreshCw className="w-2.5 h-2.5" />
+                          <span>Regenerate</span>
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <CreditCard className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          required
+                          value={extractedData.school_id || ''}
+                          onChange={(e) => setExtractedData({ ...extractedData, school_id: e.target.value })}
+                          placeholder="e.g. 2026-00001"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs font-mono font-bold text-purple-600 dark:text-purple-400 focus:outline-none focus:border-purple-500 shadow-sm"
+                        />
+                      </div>
                     </div>
-                    <div className="relative">
-                      <CreditCard className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input
-                        type="text"
-                        required
-                        value={extractedData.school_id || ''}
-                        onChange={(e) => setExtractedData({ ...extractedData, school_id: e.target.value })}
-                        placeholder="e.g. 2025-00101"
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs font-mono font-bold text-purple-600 dark:text-purple-400 focus:outline-none focus:border-purple-500 shadow-sm"
-                      />
+
+                    {/* Assigned RFID UID Field */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          Assigned RFID UID
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setExtractedData({
+                            ...extractedData,
+                            rfid_uid: generateSmartRfidUid(existingStudents)
+                          })}
+                          className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                          title="Generate a new RFID UID"
+                        >
+                          <RefreshCw className="w-2.5 h-2.5" />
+                          <span>Regenerate</span>
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <QrCode className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={extractedData.rfid_uid || ''}
+                          onChange={(e) => setExtractedData({ ...extractedData, rfid_uid: e.target.value })}
+                          placeholder="e.g. RFID-2026-00001"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 focus:outline-none focus:border-indigo-500 shadow-sm"
+                        />
+                      </div>
                     </div>
                   </div>
 

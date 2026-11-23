@@ -26,6 +26,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { parseExcelStudentFile, downloadSampleExcelTemplate } from '../lib/excelService';
+import { generateSmartSchoolId, generateSmartRfidUid, isValidSchoolId } from '../lib/idGenerator';
 import { COURSE_OPTIONS } from '../lib/mockData';
 import confetti from 'canvas-confetti';
 
@@ -154,9 +155,18 @@ export default function ExcelImportModal({
         const student = studentsToImport[i];
         setImportStatusText(`Saving ${student.first_name} ${student.last_name} (${i + 1}/${total})...`);
         
+        let schoolId = student.school_id?.trim() || '';
+        if (!isValidSchoolId(schoolId)) {
+          schoolId = generateSmartSchoolId(existingStudents, i);
+        }
+        let rfidUid = student.rfid_uid?.trim() || '';
+        if (!rfidUid || rfidUid.length > 50) {
+          rfidUid = generateSmartRfidUid(existingStudents, i);
+        }
+
         if (onBatchAddStudents) {
           await onBatchAddStudents({
-            school_id: student.school_id,
+            school_id: schoolId,
             first_name: student.first_name,
             middle_name: student.middle_name,
             last_name: student.last_name,
@@ -165,7 +175,7 @@ export default function ExcelImportModal({
             section: student.section || 'N/A',
             emergency_contact_name: student.emergency_contact_name || '',
             emergency_contact_phone: student.emergency_contact_phone || '',
-            rfid_uid: student.rfid_uid || null,
+            rfid_uid: rfidUid,
             blood_type: student.blood_type || 'O+',
             status: student.status || 'ACTIVE',
             photo_url: student.photo_url || ''
