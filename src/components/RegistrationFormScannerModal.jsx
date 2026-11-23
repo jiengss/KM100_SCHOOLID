@@ -22,7 +22,10 @@ import {
   ExternalLink,
   Info,
   Cpu,
-  Cloud
+  Cloud,
+  ChevronLeft,
+  ChevronRight,
+  Users
 } from 'lucide-react';
 import { COURSE_OPTIONS } from '../lib/mockData';
 import { parseRegistrationFormText } from '../lib/formParser';
@@ -54,6 +57,26 @@ function preprocessImageForVision(imgElement) {
   ctx.drawImage(imgElement, 0, 0, width, height);
 
   return canvas;
+}
+
+// Convert base64 data URL to Blob synchronously without fetch
+function dataUrlToBlob(dataUrl) {
+  try {
+    if (!dataUrl || typeof dataUrl !== 'string') return null;
+    const parts = dataUrl.split(',');
+    if (parts.length < 2) return null;
+    const mimeMatch = parts[0].match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const bstr = atob(parts[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  } catch {
+    return null;
+  }
 }
 
 // Generate an official unique School ID in the KM100 format: e.g. 2025-00105
@@ -96,6 +119,10 @@ export default function RegistrationFormScannerModal({
   const [savedSuccessStudent, setSavedSuccessStudent] = useState(null);
   const [extractedByGemini, setExtractedByGemini] = useState(false);
   const [gdriveInputUrl, setGdriveInputUrl] = useState('');
+
+  // Multi-Student Navigation (for Excel spreadsheets)
+  const [excelStudentsList, setExcelStudentsList] = useState([]);
+  const [currentExcelStudentIndex, setCurrentExcelStudentIndex] = useState(0);
 
   // Camera State
   const videoRef = useRef(null);
@@ -190,8 +217,17 @@ Emergency Phone Number: +63 917 123 4567`;
         }
 
         await new Promise((resolve) => {
-          img.onload = () => resolve();
+          const timeout = setTimeout(() => {
+            console.warn("Canvas preload timed out, proceeding with direct image source");
+            resolve();
+          }, 2500);
+
+          img.onload = () => {
+            clearTimeout(timeout);
+            resolve();
+          };
           img.onerror = (e) => {
+            clearTimeout(timeout);
             console.warn("Canvas preload warning, proceeding with direct image source:", e);
             resolve(); // Proceed with raw image data, do not abort!
           };
@@ -235,7 +271,7 @@ Emergency Phone Number: +63 917 123 4567`;
         let qrText = '';
         try {
           const qrScanner = new Html5Qrcode("form-qr-detector-hidden");
-          const blob = await (await fetch(optimizedDataUrl || imgSrc)).blob();
+          const blob = dataUrlToBlob(optimizedDataUrl || imgSrc);
           if (blob) {
             const fileObj = new File([blob], "temp_form.jpg", { type: "image/jpeg" });
             qrText = await qrScanner.scanFile(fileObj, false);
@@ -254,7 +290,7 @@ Emergency Phone Number: +63 917 123 4567`;
         }
 
         setExtractedData(parsed);
-        setInfoNotice("Document loaded! Gemini Vision AI had network latency, so we opened the review editor with your uploaded document preview to verify and save.");
+        setInfoNotice("Document loaded! Please review and confirm the student information below to save for School ID.");
         setIsProcessing(false);
         setProgressPercent(100);
       }
@@ -306,21 +342,24 @@ Emergency Phone Number: +63 917 123 4567`;
       setProgressStatus('Extracted student records from Excel...');
       setProgressPercent(90);
 
+      setExcelStudentsList(result.students);
+      setCurrentExcelStudentIndex(0);
+
       const firstStudent = result.students[0];
       setExtractedData(firstStudent);
       setExtractedByGemini(false);
 
       // If the Excel file contains embedded images (e.g. 2x2 photos or document scans), load the photo!
-      if (result.embeddedImages && result.embeddedImages.length > 0) {
-        setPreviewImage(result.embeddedImages[0].dataUrl);
-        setUseDocAsPhoto(true);
-      } else if (firstStudent.photo_url) {
+      if (firstStudent.photo_url) {
         setPreviewImage(firstStudent.photo_url);
+        setUseDocAsPhoto(true);
+      } else if (result.embeddedImages && result.embeddedImages.length > 0) {
+        setPreviewImage(result.embeddedImages[0].dataUrl);
         setUseDocAsPhoto(true);
       }
 
       if (result.students.length > 1) {
-        setInfoNotice(`Read Excel file "${result.fileName}" successfully! Loaded student 1 of ${result.students.length} found (with ${result.embeddedImages?.length || 0} embedded images). You can also use the Student Directory "Import Excel" feature to import all ${result.students.length} in batch.`);
+        setInfoNotice(`Read Excel file "${result.fileName}" successfully! Loaded student 1 of ${result.students.length} found (with ${result.embeddedImages?.length || 0} embedded images). You can use Prev/Next to review each or save them directly.`);
       } else {
         setInfoNotice(`Read Excel file "${result.fileName}" successfully! Review fields and save.`);
       }
@@ -331,6 +370,19 @@ Emergency Phone Number: +63 917 123 4567`;
       console.error('Excel parse failed:', err);
       setErrorMessage('Could not read Excel file: ' + (err.message || err));
       setIsProcessing(false);
+    }
+  };
+
+  // Switch between students when Excel workbook has multiple rows
+  const handleSelectExcelStudent = (index) => {
+    if (index >= 0 && index < excelStudentsList.length) {
+      setCurrentExcelStudentIndex(index);
+      const student = excelStudentsList[index];
+      setExtractedData(student);
+      if (student.photo_url) {
+        setPreviewImage(student.photo_url);
+        setUseDocAsPhoto(true);
+      }
     }
   };
 
@@ -374,8 +426,8 @@ Emergency Phone Number: +63 917 123 4567`;
     setExtractedData(parsed);
   };
 
-  // Direct Save Student to System
-  const handleDirectSave = async () => {
+  // Direct Save Student to System (with optional advance to next student)
+  const handleDirectSave = async (andAdvanceNext = false) => {
     if (!extractedData) return;
     if (!extractedData.school_id?.trim() || !extractedData.first_name?.trim() || !extractedData.last_name?.trim()) {
       setErrorMessage("Please make sure School ID, First Name, and Last Name are entered.");
@@ -396,14 +448,20 @@ Emergency Phone Number: +63 917 123 4567`;
         section: 'N/A',
         emergency_contact_name: extractedData.emergency_contact_name?.trim() || '',
         emergency_contact_phone: extractedData.emergency_contact_phone?.trim() || '',
-        photo_url: useDocAsPhoto && previewImage ? previewImage : '',
+        photo_url: useDocAsPhoto && previewImage ? previewImage : (extractedData.photo_url || ''),
         status: 'ACTIVE',
         blood_type: 'O+'
       };
 
       if (onSaveStudentDirectly) {
         const saved = await onSaveStudentDirectly(studentPayload);
-        setSavedSuccessStudent(saved || studentPayload);
+        if (andAdvanceNext && currentExcelStudentIndex < excelStudentsList.length - 1) {
+          // Advance to next student
+          handleSelectExcelStudent(currentExcelStudentIndex + 1);
+          setInfoNotice(`Saved "${studentPayload.first_name} ${studentPayload.last_name}"! Now reviewing Student ${currentExcelStudentIndex + 2} of ${excelStudentsList.length}.`);
+        } else {
+          setSavedSuccessStudent(saved || studentPayload);
+        }
       } else {
         // Fallback to onApplyData
         onApplyData(studentPayload);
@@ -428,7 +486,7 @@ Emergency Phone Number: +63 917 123 4567`;
       course_strand: extractedData.course_strand || COURSE_OPTIONS[0],
       emergency_contact_name: extractedData.emergency_contact_name || '',
       emergency_contact_phone: extractedData.emergency_contact_phone || '',
-      photo_url: useDocAsPhoto && previewImage ? previewImage : ''
+      photo_url: useDocAsPhoto && previewImage ? previewImage : (extractedData.photo_url || '')
     });
     onClose();
   };
@@ -436,6 +494,8 @@ Emergency Phone Number: +63 917 123 4567`;
   const handleResetScan = () => {
     setExtractedData(null);
     setPreviewImage(null);
+    setExcelStudentsList([]);
+    setCurrentExcelStudentIndex(0);
     setErrorMessage('');
     setInfoNotice('');
     setRawPastedText('');
@@ -888,6 +948,41 @@ Emergency Phone Number: +63 917 123 4567`;
                 </div>
               )}
 
+              {/* Multi-Student Navigation Bar (when Excel sheet contains multiple students) */}
+              {excelStudentsList.length > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 gap-2.5">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                    <span className="text-xs font-bold">
+                      Student {currentExcelStudentIndex + 1} of {excelStudentsList.length} from Excel File
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 font-black">
+                      {extractedData?.first_name} {extractedData?.last_name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={currentExcelStudentIndex === 0}
+                      onClick={() => handleSelectExcelStudent(currentExcelStudentIndex - 1)}
+                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 disabled:opacity-40 text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1 hover:bg-slate-50 transition shadow-sm"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Prev Student</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentExcelStudentIndex >= excelStudentsList.length - 1}
+                      onClick={() => handleSelectExcelStudent(currentExcelStudentIndex + 1)}
+                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 disabled:opacity-40 text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1 hover:bg-slate-50 transition shadow-sm"
+                    >
+                      <span>Next Student</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Side-by-Side Review Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 {/* Document Thumbnail Preview (5 cols on desktop) */}
@@ -1108,10 +1203,24 @@ Emergency Phone Number: +63 917 123 4567`;
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
 
+              {excelStudentsList.length > 1 && currentExcelStudentIndex < excelStudentsList.length - 1 && (
+                <button
+                  type="button"
+                  disabled={isSavingDirect}
+                  onClick={() => handleDirectSave(true)}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-purple-500/20 active:scale-95"
+                  title="Save current student and load the next student from Excel"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save & Next Student</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+
               <button
                 type="button"
                 disabled={isSavingDirect}
-                onClick={handleDirectSave}
+                onClick={() => handleDirectSave(false)}
                 className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white text-xs font-black shadow-lg shadow-emerald-500/25 transition active:scale-95 flex items-center justify-center gap-2"
               >
                 {isSavingDirect ? (

@@ -25,6 +25,48 @@ function cleanStr(val) {
   return String(val).trim();
 }
 
+// Convert string to Title Case (e.g. "JUAN DELA CRUZ" -> "Juan Dela Cruz")
+export function toTitleCase(str) {
+  if (!str) return '';
+  // Check if string is already mixed case
+  if (/[a-z]/.test(str) && /[A-Z]/.test(str) && !/^[A-Z\s,.-]+$/.test(str)) {
+    return str.trim();
+  }
+  return str
+    .toLowerCase()
+    .split(/[\s]+/)
+    .map(word => {
+      if (['ii', 'iii', 'iv', 'nc', 'rfid'].includes(word.toLowerCase())) {
+        return word.toUpperCase();
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ')
+    .trim();
+}
+
+// Clean phone numbers from Excel numbers (e.g. 9171234567 -> 09171234567)
+export function formatExcelPhoneNumber(rawPhone) {
+  if (!rawPhone) return '';
+  let str = String(rawPhone).trim();
+  // Remove decimals if Excel read as float (e.g. 9171234567.0)
+  str = str.replace(/\.0+$/, '');
+  
+  // If it's a 10-digit Philippine mobile starting with 9 (e.g. 9171234567)
+  if (/^9\d{9}$/.test(str)) {
+    return '0' + str;
+  }
+  // If already 11-digit starting with 09
+  if (/^09\d{9}$/.test(str)) {
+    return str;
+  }
+  // If starting with 639...
+  if (/^639\d{9}$/.test(str)) {
+    return '+' + str;
+  }
+  return str;
+}
+
 /**
  * Extracts embedded images (e.g. 2x2 ID photos or form scans) from an Excel (.xlsx) file
  * @param {ArrayBuffer} arrayBuffer
@@ -98,10 +140,55 @@ export async function extractEmbeddedImagesFromXlsx(arrayBuffer) {
 }
 
 /**
- * Parses an Excel (.xlsx, .xls, .csv) file into student objects
- * Extracts student records, resolves Google Drive links, and attaches any embedded photos
+ * Finds the actual header row in a spreadsheet 2D array by scanning for student table keywords
  */
-export async function parseExcelStudentFile(fileInput, existingStudents = []) {
+export function detectHeaderRowIndex(rows2D) {
+  if (!rows2D || rows2D.length === 0) return 0;
+
+  const headerKeywords = [
+    'first name', 'firstname', 'last name', 'lastname', 'surname', 'student name', 'name',
+    'school id', 'student id', 'id number', 'id no', 'lrn', 'student no', 'id',
+    'course', 'strand', 'program', 'technology', 'tech',
+    'emergency', 'contact', 'phone', 'mobile', 'guardian', 'parent',
+    'photo', 'image', 'rfid', 'gender', 'sex', 'section', 'grade'
+  ];
+
+  let bestRowIndex = 0;
+  let maxScore = 0;
+
+  // Scan up to first 20 rows
+  const scanLimit = Math.min(20, rows2D.length);
+  for (let r = 0; r < scanLimit; r++) {
+    const row = rows2D[r];
+    if (!Array.isArray(row)) continue;
+
+    let score = 0;
+    for (const cell of row) {
+      const cellStr = cleanStr(cell).toLowerCase();
+      if (!cellStr) continue;
+
+      for (const kw of headerKeywords) {
+        if (cellStr === kw || cellStr.includes(kw)) {
+          score += (cellStr === kw ? 3 : 1);
+        }
+      }
+    }
+
+    if (score > maxScore) {
+      maxScore = score;
+      bestRowIndex = r;
+    }
+  }
+
+  // If no good header row was found (e.g. score < 2), default to 0
+  return maxScore >= 2 ? bestRowIndex : 0;
+}
+
+/**
+ * Accurately parses an Excel (.xlsx, .xls, .csv) file into student objects
+ * Accurately detects title rows, extracts exact file columns, maps Google Drive images and embedded photos
+ */
+export async function parseExcelStudentFile(fileInput, existingStudents = [], targetSheetName = null) {
   let arrayBuffer;
   let fileName = 'Students.xlsx';
 
@@ -116,7 +203,7 @@ export async function parseExcelStudentFile(fileInput, existingStudents = []) {
     throw new Error('Unsupported file input for Excel parsing');
   }
 
-  // 1. Extract any embedded images inside the Excel workbook
+  // 1. Extract embedded images from zip media
   let embeddedImages = [];
   try {
     embeddedImages = await extractEmbeddedImagesFromXlsx(arrayBuffer);
@@ -124,200 +211,212 @@ export async function parseExcelStudentFile(fileInput, existingStudents = []) {
     console.warn("Embedded image scanning skipped:", imgErr);
   }
 
-  // 2. Read workbook sheets
-  const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+  // 2. Read workbook
+  const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
   if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
     throw new Error('No worksheets found in this Excel file.');
   }
 
-  const firstSheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[firstSheetName];
+  const selectedSheetName = targetSheetName && workbook.SheetNames.includes(targetSheetName)
+    ? targetSheetName
+    : workbook.SheetNames[0];
 
-  // Convert to JSON with header rows
-  const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-  if (!rawRows || rawRows.length === 0) {
-    throw new Error('The Excel sheet contains no data rows.');
+  const worksheet = workbook.Sheets[selectedSheetName];
+
+  // 3. Convert to 2D array to detect real header row (ignoring school title blocks)
+  const rows2D = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: false });
+  if (!rows2D || rows2D.length === 0) {
+    throw new Error('The selected Excel sheet contains no data.');
   }
 
-  const parsedStudents = [];
+  const headerRowIdx = detectHeaderRowIndex(rows2D);
+  const rawHeaderRow = (rows2D[headerRowIdx] || []).map((h, i) => cleanStr(h) || `Column_${i + 1}`);
+  
+  // Data rows are everything after headerRowIdx
+  const rawDataRows = rows2D.slice(headerRowIdx + 1);
 
-  rawRows.forEach((row, index) => {
-    // Normalize row keys to lowercase without spaces or underscores
-    const normalizedRow = {};
-    for (const key of Object.keys(row)) {
-      const cleanKey = key.toLowerCase().replace(/[\s_\.\-\/\#]/g, '');
-      normalizedRow[cleanKey] = row[key];
+  // Build clean column map (normalized name -> column index)
+  const colIndexMap = {};
+  rawHeaderRow.forEach((h, colIdx) => {
+    const cleanH = h.toLowerCase().replace(/[\s_\.\-\/\#\(\)]/g, '');
+    colIndexMap[cleanH] = colIdx;
+  });
+
+  const parsedStudents = [];
+  const rawDisplayRows = [];
+
+  rawDataRows.forEach((rowArray, rowIndex) => {
+    if (!Array.isArray(rowArray) || rowArray.every(c => cleanStr(c) === '')) {
+      return; // Skip empty rows
     }
 
-    // School ID
-    let schoolId = 
-      cleanStr(normalizedRow['schoolid']) ||
-      cleanStr(normalizedRow['studentid']) ||
-      cleanStr(normalizedRow['idnumber']) ||
-      cleanStr(normalizedRow['idno']) ||
-      cleanStr(normalizedRow['studentno']) ||
-      cleanStr(normalizedRow['id']) ||
-      cleanStr(normalizedRow['lrn']);
+    // Helper to get value by fuzzy column keys
+    const getVal = (...keys) => {
+      for (const k of keys) {
+        const cleanK = k.toLowerCase().replace(/[\s_\.\-\/\#\(\)]/g, '');
+        // Exact normalized match
+        if (colIndexMap[cleanK] !== undefined) {
+          const val = rowArray[colIndexMap[cleanK]];
+          if (val !== undefined && val !== null && cleanStr(val) !== '') {
+            return cleanStr(val);
+          }
+        }
+        // Substring match
+        for (const [colName, colIdx] of Object.entries(colIndexMap)) {
+          if (colName.includes(cleanK) || cleanK.includes(colName)) {
+            const val = rowArray[colIdx];
+            if (val !== undefined && val !== null && cleanStr(val) !== '') {
+              return cleanStr(val);
+            }
+          }
+        }
+      }
+      return '';
+    };
 
-    // First Name
-    let firstName = 
-      cleanStr(normalizedRow['firstname']) ||
-      cleanStr(normalizedRow['first']) ||
-      cleanStr(normalizedRow['givenname']) ||
-      cleanStr(normalizedRow['fname']);
+    // 1. School ID
+    let schoolId = getVal('schoolid', 'studentid', 'idnumber', 'idno', 'studentno', 'lrn', 'id');
 
-    // Middle Name
-    let middleName = 
-      cleanStr(normalizedRow['middlename']) ||
-      cleanStr(normalizedRow['middle']) ||
-      cleanStr(normalizedRow['mi']) ||
-      cleanStr(normalizedRow['mname']);
+    // 2. Names
+    let firstName = getVal('firstname', 'first', 'givenname', 'fname');
+    let middleName = getVal('middlename', 'middle', 'mi', 'mname');
+    let lastName = getVal('lastname', 'last', 'surname', 'familyname', 'lname');
 
-    // Last Name
-    let lastName = 
-      cleanStr(normalizedRow['lastname']) ||
-      cleanStr(normalizedRow['last']) ||
-      cleanStr(normalizedRow['surname']) ||
-      cleanStr(normalizedRow['familyname']) ||
-      cleanStr(normalizedRow['lname']);
-
-    // Full name fallback
-    const combinedName = 
-      cleanStr(normalizedRow['name']) || 
-      cleanStr(normalizedRow['studentname']) || 
-      cleanStr(normalizedRow['fullname']);
-
+    // Full name column fallback (e.g. "Dela Cruz, Juan Bautista" or "Juan Dela Cruz")
+    const combinedName = getVal('name', 'studentname', 'fullname', 'student');
     if ((!firstName || !lastName) && combinedName) {
       if (combinedName.includes(',')) {
-        const parts = combinedName.split(',').map(p => p.trim());
-        lastName = parts[0] || '';
+        // "DELA CRUZ, JUAN BAUTISTA"
+        const parts = combinedName.split(',').map(p => cleanStr(p));
+        lastName = toTitleCase(parts[0]);
         if (parts[1]) {
-          const firstAndMiddle = parts[1].split(/\s+/);
-          firstName = firstAndMiddle[0] || '';
-          if (firstAndMiddle.length > 1) {
-            middleName = firstAndMiddle.slice(1).join(' ');
+          const nameTokens = parts[1].split(/\s+/).filter(Boolean);
+          firstName = toTitleCase(nameTokens[0] || '');
+          if (nameTokens.length > 1) {
+            middleName = toTitleCase(nameTokens.slice(1).join(' '));
           }
         }
       } else {
-        const nameParts = combinedName.split(/\s+/);
-        if (nameParts.length === 1) {
-          firstName = nameParts[0];
+        // "Juan Bautista Dela Cruz"
+        const tokens = combinedName.split(/\s+/).filter(Boolean);
+        if (tokens.length === 1) {
+          firstName = toTitleCase(tokens[0]);
           lastName = 'Student';
-        } else if (nameParts.length === 2) {
-          firstName = nameParts[0];
-          lastName = nameParts[1];
+        } else if (tokens.length === 2) {
+          firstName = toTitleCase(tokens[0]);
+          lastName = toTitleCase(tokens[1]);
         } else {
-          firstName = nameParts[0];
-          middleName = nameParts.slice(1, -1).join(' ');
-          lastName = nameParts[nameParts.length - 1];
+          firstName = toTitleCase(tokens[0]);
+          middleName = toTitleCase(tokens.slice(1, -1).join(' '));
+          lastName = toTitleCase(tokens[tokens.length - 1]);
         }
       }
+    } else {
+      firstName = toTitleCase(firstName);
+      middleName = toTitleCase(middleName);
+      lastName = toTitleCase(lastName);
     }
 
-    // Skip empty row if no name is available
+    // Skip row if no student name could be found
     if (!firstName && !lastName) {
       return;
     }
 
-    // Technology Course / Strand
-    const rawCourse = 
-      cleanStr(normalizedRow['course']) ||
-      cleanStr(normalizedRow['coursestrand']) ||
-      cleanStr(normalizedRow['technologycourse']) ||
-      cleanStr(normalizedRow['techcourse']) ||
-      cleanStr(normalizedRow['strand']) ||
-      cleanStr(normalizedRow['program']) ||
-      cleanStr(normalizedRow['track']);
+    // 3. Course / Program
+    const rawCourse = getVal('course', 'coursestrand', 'technologycourse', 'techcourse', 'strand', 'program', 'track', 'specialization');
+    const matchedCourse = matchTechnologyCourse(rawCourse);
 
-    const courseStrand = matchTechnologyCourse(rawCourse);
+    // 4. Emergency Contacts
+    const emergencyContactName = toTitleCase(getVal('emergencycontactname', 'emergencycontact', 'parentname', 'guardian', 'parent', 'contactperson', 'emergency'));
+    const emergencyContactPhone = formatExcelPhoneNumber(getVal('emergencycontactphone', 'emergencyphone', 'contactnumber', 'contactno', 'parentphone', 'phone', 'mobile', 'cellphone'));
 
-    // Emergency Contacts
-    const emergencyContactName = 
-      cleanStr(normalizedRow['emergencycontactname']) ||
-      cleanStr(normalizedRow['emergencycontact']) ||
-      cleanStr(normalizedRow['parentname']) ||
-      cleanStr(normalizedRow['guardian']) ||
-      cleanStr(normalizedRow['parent']) ||
-      cleanStr(normalizedRow['contactperson']);
+    // 5. RFID UID
+    const rfidUid = getVal('rfiduid', 'rfid', 'uid', 'carduid');
 
-    const emergencyContactPhone = 
-      cleanStr(normalizedRow['emergencycontactphone']) ||
-      cleanStr(normalizedRow['emergencyphone']) ||
-      cleanStr(normalizedRow['contactnumber']) ||
-      cleanStr(normalizedRow['contactno']) ||
-      cleanStr(normalizedRow['parentphone']) ||
-      cleanStr(normalizedRow['phone']) ||
-      cleanStr(normalizedRow['mobile']) ||
-      cleanStr(normalizedRow['cellphone']);
+    // 6. Grade / Section / Gender / Blood Type
+    const gradeLevel = getVal('gradelevel', 'grade', 'yearlevel', 'year') || 'N/A';
+    const section = getVal('section', 'class', 'batch') || 'N/A';
+    const gender = getVal('gender', 'sex') || 'Unspecified';
+    const bloodType = getVal('bloodtype', 'blood') || 'O+';
 
-    // RFID UID
-    const rfidUid = 
-      cleanStr(normalizedRow['rfiduid']) ||
-      cleanStr(normalizedRow['rfid']) ||
-      cleanStr(normalizedRow['uid']) ||
-      cleanStr(normalizedRow['carduid']);
-
-    // Status
-    const rawStatus = cleanStr(normalizedRow['status']).toUpperCase();
+    // 7. Status
+    const rawStatus = getVal('status').toUpperCase();
     const status = (rawStatus === 'INACTIVE' || rawStatus === 'SUSPENDED') ? rawStatus : 'ACTIVE';
 
-    // Auto-generate School ID if row was missing one
-    if (!schoolId) {
-      schoolId = generateSmartSchoolId(existingStudents, index);
-    }
+    // 8. Photo URL & Embedded Image Resolution
+    let photoUrl = getVal('photourl', 'photo', 'image', 'picture', 'gdrive', 'googledrive', '2x2', 'idphoto');
+    let photoSourceType = 'none';
 
-    // Photo URL (with Google Drive link resolution & embedded image matching)
-    let photoUrl = 
-      cleanStr(normalizedRow['photourl']) || 
-      cleanStr(normalizedRow['photo']) || 
-      cleanStr(normalizedRow['image']) ||
-      cleanStr(normalizedRow['picture']) ||
-      cleanStr(normalizedRow['gdrive']) ||
-      cleanStr(normalizedRow['googledrive']) ||
-      cleanStr(normalizedRow['2x2']) ||
-      cleanStr(normalizedRow['idphoto']) ||
-      '';
-
-    // If photoUrl is a Google Drive link, automatically convert to direct CDN image URL
+    // If it's a Google Drive link, convert to direct high-res CDN link
     if (photoUrl && isGoogleDriveUrl(photoUrl)) {
       photoUrl = convertToGoogleDriveDirectImageUrl(photoUrl, 800);
+      photoSourceType = 'gdrive';
+    } else if (photoUrl) {
+      photoSourceType = 'url';
     }
 
-    // If row had no photo URL, check if there is an embedded image mapped to this row in the Excel sheet
+    // If no photo URL was in the column, check for embedded images in this row
     if (!photoUrl && embeddedImages.length > 0) {
-      // Check 1: Image anchored to this row index (1-based or 0-based)
-      const mappedImg = embeddedImages.find(img => img.row === (index + 1) || img.row === index);
+      const actualRowNumber = headerRowIdx + 1 + rowIndex;
+      // Match by Excel row index (anchor row)
+      const mappedImg = embeddedImages.find(img => img.row === actualRowNumber || img.row === (actualRowNumber - 1));
       if (mappedImg) {
         photoUrl = mappedImg.dataUrl;
-      } else if (embeddedImages[index]) {
-        // Check 2: Sequential match (e.g. 1st image corresponds to 1st student)
-        photoUrl = embeddedImages[index].dataUrl;
+        photoSourceType = 'excel_embedded';
+      } else if (embeddedImages[rowIndex]) {
+        photoUrl = embeddedImages[rowIndex].dataUrl;
+        photoSourceType = 'excel_embedded';
       }
     }
 
-    parsedStudents.push({
+    // Auto-generate School ID if empty
+    const isIdAutoGenerated = !schoolId;
+    if (!schoolId) {
+      schoolId = generateSmartSchoolId(existingStudents, rowIndex);
+    }
+
+    // Construct full row object for display
+    const rawRowObj = {};
+    rawHeaderRow.forEach((h, cIdx) => {
+      rawRowObj[h] = rowArray[cIdx] !== undefined ? cleanStr(rowArray[cIdx]) : '';
+    });
+
+    const parsedStudent = {
+      row_index: rowIndex + 1,
       school_id: schoolId,
+      is_id_generated: isIdAutoGenerated,
       first_name: firstName,
       middle_name: middleName,
       last_name: lastName,
-      course_strand: courseStrand,
-      grade_level: cleanStr(normalizedRow['gradelevel']) || cleanStr(normalizedRow['grade']) || 'N/A',
-      section: cleanStr(normalizedRow['section']) || 'N/A',
+      raw_course: rawCourse,
+      course_strand: matchedCourse,
+      grade_level: gradeLevel,
+      section: section,
+      gender: gender,
       emergency_contact_name: emergencyContactName,
       emergency_contact_phone: emergencyContactPhone,
       rfid_uid: rfidUid || null,
-      blood_type: cleanStr(normalizedRow['bloodtype']) || 'O+',
+      blood_type: bloodType,
       status: status,
-      photo_url: photoUrl
-    });
+      photo_url: photoUrl,
+      photo_source_type: photoSourceType,
+      raw_data: rawRowObj
+    };
+
+    parsedStudents.push(parsedStudent);
+    rawDisplayRows.push(rawRowObj);
   });
 
   return {
     students: parsedStudents,
-    totalRows: rawRows.length,
+    rawHeaders: rawHeaderRow,
+    rawRows: rawDisplayRows,
+    totalRows: rawDataRows.length,
     fileName,
+    selectedSheetName,
     sheetNames: workbook.SheetNames,
-    embeddedImages
+    embeddedImages,
+    headerRowIndex: headerRowIdx + 1
   };
 }
 
@@ -366,23 +465,21 @@ export function downloadSampleExcelTemplate() {
 
   const worksheet = XLSX.utils.json_to_sheet(sampleData);
 
-  // Set column widths
   worksheet['!cols'] = [
-    { wch: 15 }, // School ID
-    { wch: 18 }, // First Name
-    { wch: 15 }, // Middle Name
-    { wch: 18 }, // Last Name
-    { wch: 38 }, // Course
-    { wch: 28 }, // Emergency Contact
-    { wch: 22 }, // Emergency Phone
-    { wch: 45 }, // Photo URL / Google Drive Link
-    { wch: 15 }, // RFID UID
-    { wch: 10 }  // Status
+    { wch: 15 },
+    { wch: 18 },
+    { wch: 15 },
+    { wch: 18 },
+    { wch: 38 },
+    { wch: 28 },
+    { wch: 22 },
+    { wch: 45 },
+    { wch: 15 },
+    { wch: 10 }
   ];
 
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Students_Masterlist');
-
   XLSX.writeFile(workbook, 'KM100_Student_Import_Template.xlsx');
 }
 
@@ -431,6 +528,5 @@ export function exportStudentsToExcel(students = [], fileName = 'KM100_Students_
 
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'KM100_Students');
-
   XLSX.writeFile(workbook, fileName);
 }

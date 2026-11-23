@@ -136,11 +136,11 @@ Important Rules:
     }
   };
 
-  // Attempt models in order: gemini-3.5-flash -> gemini-3.1-flash-lite -> gemini-flash-latest
+  // Attempt models in order: gemini-3.5-flash -> gemini-3.1-flash-lite -> gemini-3.5-flash-lite
   const candidateModels = [
     'gemini-3.5-flash',
     'gemini-3.1-flash-lite',
-    'gemini-flash-latest'
+    'gemini-3.5-flash-lite'
   ];
 
   let lastError = null;
