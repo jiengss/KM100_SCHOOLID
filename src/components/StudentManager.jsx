@@ -20,7 +20,6 @@ import {
   GraduationCap, 
   Filter, 
   ChevronDown, 
-  Database, 
   Upload, 
   Camera, 
   Image as ImageIcon, 
@@ -39,8 +38,7 @@ export default function StudentManager({
   onUpdateStudent, 
   onDeleteStudent,
   onOpenCardModal,
-  isSupabaseConfigured = false,
-  onOpenSupabaseModal
+  isSupabaseConfigured = false
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('ALL');
@@ -286,22 +284,10 @@ export default function StudentManager({
               <Users className="w-5 h-5 text-blue-500 dark:text-blue-400" />
               <span>Student Information Directory</span>
             </h2>
-            {isSupabaseConfigured ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Supabase Live Cloud
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={onOpenSupabaseModal}
-                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition cursor-pointer"
-                title="Connect Supabase PostgreSQL Database"
-              >
-                <Database className="w-3 h-3 text-amber-500" />
-                <span>Connect Supabase</span>
-              </button>
-            )}
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Supabase Live Cloud
+            </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             KM100 Skills and Training Center, Inc. • Technical-Vocational Programs (NC II)

@@ -325,7 +325,6 @@ export default function App() {
                       }}
                       theme={theme}
                       isSupabaseConfigured={isSupabaseConfigured}
-                      onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
                     />
                   )}
 
@@ -341,7 +340,6 @@ export default function App() {
                       onDeleteStudent={handleDeleteStudent}
                       onOpenCardModal={handleOpenCardModal}
                       isSupabaseConfigured={isSupabaseConfigured}
-                      onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
                       theme={theme}
                     />
                   )}

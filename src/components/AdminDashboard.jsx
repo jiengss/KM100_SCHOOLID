@@ -23,8 +23,7 @@ import {
   Radio,
   Compass,
   Utensils,
-  Coffee,
-  Database
+  Coffee
 } from 'lucide-react';
 import { COURSE_OPTIONS } from '../lib/mockData';
 
@@ -34,8 +33,7 @@ export default function AdminDashboard({
   onNavigateTab, 
   onOpenAddStudent, 
   onLaunchGateTV,
-  isSupabaseConfigured,
-  onOpenSupabaseModal
+  isSupabaseConfigured
 }) {
   const todayStr = new Date().toISOString().split('T')[0];
   const todayLogs = logs.filter(l => l.timestamp.split('T')[0] === todayStr);
@@ -168,21 +166,6 @@ export default function AdminDashboard({
             <DoorOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
             <span className="truncate">Gate TV</span>
           </button>
-
-          {onOpenSupabaseModal && (
-            <button
-              onClick={onOpenSupabaseModal}
-              className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm active:scale-95 hover:scale-[1.02] border ${
-                isSupabaseConfigured
-                  ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/30'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-darkbg-850 dark:hover:bg-darkbg-800 dark:text-slate-200 border-slate-300 dark:border-slate-700'
-              }`}
-              title="Configure Supabase Cloud Database"
-            >
-              <Database className={`w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 ${isSupabaseConfigured ? 'text-emerald-500' : 'text-slate-400'}`} />
-              <span className="truncate">{isSupabaseConfigured ? 'Cloud DB' : 'Config DB'}</span>
-            </button>
-          )}
         </div>
       </div>
 
