@@ -350,9 +350,9 @@ export default function App() {
         )}
       </main>
 
-      {/* Real-time Gate Tap Toast for Admin when working in Admin portal */}
+      {/* Real-time Gate Tap Toast for Admin when working in Admin portal (Responsive Positioning) */}
       {currentPortal === 'admin' && lastScanResult && lastScanResult.success && (
-        <div className="fixed bottom-14 right-6 z-50 flex items-center gap-3 bg-white/95 dark:bg-slate-900/95 border border-emerald-500/40 text-slate-900 dark:text-white px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-md">
+        <div className="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-14 z-50 flex items-center justify-between gap-3 bg-white/95 dark:bg-slate-900/95 border border-emerald-500/40 text-slate-900 dark:text-white px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-md max-w-sm ml-auto">
           <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
             {lastScanResult.logType}
           </div>

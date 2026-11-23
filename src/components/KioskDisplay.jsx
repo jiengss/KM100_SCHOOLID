@@ -235,7 +235,7 @@ export default function KioskDisplay({
         {/* ============================================================ */}
         {/* LEFT / CENTER: PRIMARY MAIN GATE SCANNER SCREEN              */}
         {/* ============================================================ */}
-        <div className="flex-1 min-h-[500px] glass-panel-glow rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-tech-grid">
+        <div className="flex-1 min-h-[360px] sm:min-h-[500px] glass-panel-glow rounded-2xl sm:rounded-3xl p-4 sm:p-10 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-tech-grid">
           {/* AMBIENT HOLOGRAPHIC KM100 WATERMARK (CIRCULAR FEATHERED, NO SQUARE CORNERS) */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none z-0">
             {/* Concentric Ambient Rings */}
@@ -452,21 +452,21 @@ export default function KioskDisplay({
               </h2>
 
               {/* Action Buttons: Open Camera & Enter ID */}
-              <div className="mt-5 sm:mt-6 flex flex-col xs:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-sm px-2">
+              <div className="mt-4 sm:mt-6 flex flex-row items-center justify-center gap-2.5 sm:gap-4 w-full max-w-sm px-1">
                 <button
                   onClick={onOpenCamera}
-                  className="w-full xs:w-auto flex-1 flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-extrabold tracking-wide transition-all shadow-lg shadow-blue-500/25 active:scale-95 hover:scale-[1.02] border border-blue-400/30"
+                  className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-extrabold tracking-wide transition-all shadow-lg shadow-blue-500/25 active:scale-95 hover:scale-[1.02] border border-blue-400/30"
                 >
-                  <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>Open Camera</span>
+                  <Camera className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                  <span className="truncate">Camera</span>
                 </button>
 
                 <button
                   onClick={onOpenManual}
-                  className="w-full xs:w-auto flex-1 flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 dark:bg-darkbg-850 dark:hover:bg-darkbg-800 dark:text-white text-xs sm:text-sm font-extrabold tracking-wide border border-slate-300 dark:border-slate-700/80 transition-all shadow-md active:scale-95 hover:scale-[1.02]"
+                  className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-white hover:bg-slate-100 text-slate-800 dark:bg-darkbg-850 dark:hover:bg-darkbg-800 dark:text-white text-xs sm:text-sm font-extrabold tracking-wide border border-slate-300 dark:border-slate-700/80 transition-all shadow-md active:scale-95 hover:scale-[1.02]"
                 >
-                  <Keyboard className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-400" />
-                  <span>Enter ID</span>
+                  <Keyboard className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-400 flex-shrink-0" />
+                  <span className="truncate">Enter ID</span>
                 </button>
               </div>
             </div>
