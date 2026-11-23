@@ -324,9 +324,10 @@ export default function StudentManager({
         </div>
       </div>
 
-      {/* Students Table */}
-      <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto touch-scroll">
+      {/* Students Directory Container (Responsive: Cards on Mobile, Table on Desktop) */}
+      <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl">
+        {/* DESKTOP TABLE VIEW (md+) */}
+        <div className="hidden md:block overflow-x-auto touch-scroll">
           <table className="w-full text-left text-xs whitespace-nowrap">
             <thead className="bg-slate-100 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 font-bold uppercase tracking-wider">
               <tr>
@@ -440,6 +441,121 @@ export default function StudentManager({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* MOBILE ADAPTIVE CARD VIEW (< md) */}
+        <div className="md:hidden">
+          {filteredStudents.length === 0 ? (
+            <div className="p-8 text-center text-slate-500">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mx-auto mb-2">
+                <Users className="w-6 h-6" />
+              </div>
+              <p className="font-extrabold text-slate-800 dark:text-slate-200 text-sm">
+                {students.length === 0 ? "No Students Registered Yet" : "No Matching Students"}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
+                {students.length === 0 
+                  ? "Scan a student form or click register below to enroll your first student."
+                  : "Try clearing search or changing the course filter."}
+              </p>
+              {students.length === 0 && (
+                <div className="mt-4 flex flex-col gap-2">
+                  <button
+                    onClick={() => setIsFormScannerOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl text-xs font-bold shadow-md active:scale-95"
+                  >
+                    <ScanLine className="w-4 h-4 text-cyan-200" />
+                    <span>Scan Registration Form</span>
+                  </button>
+                  <button
+                    onClick={handleOpenAdd}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 active:scale-95"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Register Manually</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {filteredStudents.map((student) => (
+                <div key={student.id} className="p-3.5 sm:p-4 space-y-3 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                  {/* Top: Avatar, Name, School ID, Status */}
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={student.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
+                      alt={student.first_name}
+                      className="w-12 h-12 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex-shrink-0 shadow-sm"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <h4 className="font-bold text-slate-900 dark:text-white text-sm truncate">
+                          {student.first_name} {student.middle_name ? student.middle_name + ' ' : ''}{student.last_name}
+                        </h4>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex-shrink-0">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          {student.status || 'ACTIVE'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-md text-[11px] border border-blue-200 dark:border-blue-500/20">
+                          {student.school_id}
+                        </span>
+                        {student.rfid_uid && (
+                          <span className="font-mono text-slate-500 dark:text-slate-400 text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                            RFID: {student.rfid_uid}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Course Strand Tag */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 text-[11px] font-semibold text-slate-800 dark:text-slate-200">
+                    <GraduationCap className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 flex-shrink-0" />
+                    <span className="truncate">{student.course_strand || 'General Technology (NC II)'}</span>
+                  </div>
+
+                  {/* Emergency Contact */}
+                  {(student.emergency_contact_name || student.emergency_contact_phone) && (
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                      <Phone className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                      <span className="truncate">
+                        Emergency: <strong className="text-slate-700 dark:text-slate-300">{student.emergency_contact_name || 'Guardian'}</strong> {student.emergency_contact_phone && `(${student.emergency_contact_phone})`}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Touch Action Buttons */}
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                    <button
+                      onClick={() => onOpenCardModal(student)}
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-bold border border-blue-500/25 active:scale-95 transition"
+                    >
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>ID Card</span>
+                    </button>
+                    <button
+                      onClick={() => handleOpenEdit(student)}
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => setStudentToDelete(student)}
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold border border-rose-500/25 active:scale-95 transition"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

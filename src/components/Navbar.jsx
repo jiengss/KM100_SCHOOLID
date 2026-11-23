@@ -67,7 +67,7 @@ export default function Navbar({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <h1 className="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight uppercase truncate">
-                  KM100 <span className="text-orange-500 dark:text-orange-400">Skills and Training Center, Inc.</span>
+                  KM100 <span className="text-orange-500 dark:text-orange-400 hidden xs:inline">Skills & Training</span>
                 </h1>
                 <span
                   className={`hidden xs:inline-flex text-[9px] sm:text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full border shadow-sm flex-shrink-0 ${
@@ -151,7 +151,7 @@ export default function Navbar({
             {/* Audio Toggle */}
             <button
               onClick={handleToggleSound}
-              className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm active:scale-95 ${
+              className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm active:scale-95 ${
                 soundEnabled
                   ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:bg-emerald-950/60 dark:border-emerald-500/40 dark:text-emerald-300 hover:bg-emerald-500/20 dark:hover:bg-emerald-900/60'
                   : 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800 dark:bg-darkbg-950 dark:border-slate-700/80 dark:text-slate-400 dark:hover:text-slate-200'
@@ -159,15 +159,15 @@ export default function Navbar({
               title={soundEnabled ? "Click to mute audio" : "Click to enable audio"}
             >
               {soundEnabled ? (
-                <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 dark:text-emerald-400" />
+                <Volume2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 flex-shrink-0" />
               ) : (
-                <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
+                <VolumeX className="w-4 h-4 text-slate-400 flex-shrink-0" />
               )}
               <span className="hidden sm:inline">
                 {soundEnabled ? 'Sound: ON' : 'Sound: OFF'}
               </span>
               <div
-                className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
+                className={`hidden sm:block w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
                   soundEnabled
                     ? 'bg-emerald-500 dark:bg-emerald-400 shadow-sm shadow-emerald-400'
                     : 'bg-slate-400 dark:bg-slate-600'
@@ -180,7 +180,7 @@ export default function Navbar({
               <>
                 <button
                   onClick={onToggleFullscreen}
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 dark:bg-orange-500/15 dark:hover:bg-orange-500/25 text-orange-600 dark:text-orange-300 border border-orange-500/30 text-xs font-bold transition shadow-sm active:scale-95"
+                  className="hidden xs:flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 dark:bg-orange-500/15 dark:hover:bg-orange-500/25 text-orange-600 dark:text-orange-300 border border-orange-500/30 text-xs font-bold transition shadow-sm active:scale-95"
                   title="Launch dedicated Fullscreen Gate Monitor on TV/display"
                 >
                   <Maximize2 className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" />
@@ -190,11 +190,11 @@ export default function Navbar({
                 {/* SWITCH TO ADMIN SIDE BUTTON */}
                 <button
                   onClick={handleAdminClick}
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black transition-all shadow-lg shadow-blue-500/25 active:scale-95 hover:scale-[1.02]"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black transition-all shadow-lg shadow-blue-500/25 active:scale-95 hover:scale-[1.02]"
                 >
                   <Shield className="w-3.5 h-3.5" />
-                  <span className="hidden xs:inline">Admin</span> Side
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>Admin</span>
+                  <ArrowRight className="w-3.5 h-3.5 hidden xs:inline" />
                 </button>
               </>
             ) : (

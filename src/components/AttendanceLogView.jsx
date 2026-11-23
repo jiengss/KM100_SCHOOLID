@@ -192,8 +192,10 @@ export default function AttendanceLogView({ logs, students }) {
       </div>
 
       {/* Logs Table */}
-      <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto touch-scroll">
+      {/* Attendance Logs Container (Responsive: Cards on Mobile, Table on Desktop) */}
+      <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl">
+        {/* DESKTOP TABLE VIEW (md+) */}
+        <div className="hidden md:block overflow-x-auto touch-scroll">
           <table className="w-full text-left text-xs whitespace-nowrap">
             <thead className="bg-slate-100 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">
               <tr>
@@ -283,6 +285,75 @@ export default function AttendanceLogView({ logs, students }) {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* MOBILE ADAPTIVE LOG STREAM (< md) */}
+        <div className="md:hidden">
+          {filteredLogs.length === 0 ? (
+            <div className="py-12 px-4 text-center text-slate-400 dark:text-slate-500 text-xs">
+              No attendance logs match the current filters.
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {filteredLogs.map((log) => {
+                const student = log.student || students.find(s => s.id === log.student_id || s.school_id === log.school_id);
+                const dateObj = new Date(log.timestamp);
+                return (
+                  <div key={log.id} className="p-3.5 space-y-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                    {/* Top: Event Type badge + Timestamp */}
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          log.log_type === 'IN'
+                            ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 dark:text-emerald-400'
+                            : 'bg-indigo-500/10 text-indigo-600 border border-indigo-500/30 dark:text-indigo-400'
+                        }`}
+                      >
+                        {log.log_type === 'IN' ? (
+                          <>
+                            <LogIn className="w-3 h-3" />
+                            <span>TIME IN</span>
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="w-3 h-3" />
+                            <span>TIME OUT</span>
+                          </>
+                        )}
+                      </span>
+
+                      <span className="font-mono text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                        {dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+
+                    {/* Middle: Student Details */}
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={student?.photo_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
+                        alt={student?.first_name || 'Student'}
+                        className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex-shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                          {student ? `${student.first_name} ${student.last_name}` : 'Unknown Student'}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="font-mono text-[10px] text-blue-600 dark:text-blue-400 font-bold">
+                            {log.school_id}
+                          </span>
+                          <span className="text-[10px] text-slate-400">•</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            {log.gate_station || 'Main Gate'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

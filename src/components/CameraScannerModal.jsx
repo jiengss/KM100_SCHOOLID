@@ -60,7 +60,13 @@ export default function CameraScannerModal({ isOpen, onClose, onScanSuccess }) {
 
       const config = {
         fps: 15,
-        qrbox: { width: 280, height: 180 },
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const edge = Math.min(viewfinderWidth, viewfinderHeight);
+          return {
+            width: Math.max(160, Math.floor(edge * 0.75)),
+            height: Math.max(120, Math.floor(edge * 0.65))
+          };
+        },
         aspectRatio: 1.333333
       };
 

@@ -216,73 +216,73 @@ Emergency Phone Number: +63 917 123 4567`;
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
       {/* Hidden container for QR scanning */}
       <div id="form-qr-detector-hidden" className="hidden" />
 
-      <div className="w-full max-w-2xl bg-white dark:bg-darkbg-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] transition-all">
+      <div className="w-full max-w-2xl bg-white dark:bg-darkbg-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[92vh] transition-all">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-darkbg-950/70 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/25">
-              <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="p-3.5 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-darkbg-950/70 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 flex-shrink-0">
+              <FileText className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                  Scan Student Registration Form
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h3 className="text-xs sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">
+                  Scan Registration Form
                 </h3>
-                <span className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase">
+                <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 text-[9px] sm:text-[10px] font-black uppercase">
                   OCR Engine
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Automatically copies Name, Technology Course, and Emergency Contacts from student forms
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                Auto-extracts Name, NC II Course, and Emergency Contacts
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-slate-200/70 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-200/70 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition flex-shrink-0 ml-2"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-5">
+        <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5">
           {!extractedData ? (
             <>
               {/* Scan Mode Tabs */}
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-darkbg-950 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-darkbg-950 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => { setActiveTab('upload'); setErrorMessage(''); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition active:scale-95 ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition active:scale-95 ${
                     activeTab === 'upload'
                       ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  <span>Upload Document</span>
+                  <span>Upload</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setActiveTab('camera'); setErrorMessage(''); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition active:scale-95 ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition active:scale-95 ${
                     activeTab === 'camera'
                       ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
                   <Camera className="w-3.5 h-3.5" />
-                  <span>Camera Scanner</span>
+                  <span>Camera</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setActiveTab('paste'); setErrorMessage(''); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition active:scale-95 ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition active:scale-95 ${
                     activeTab === 'paste'
                       ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
@@ -295,11 +295,11 @@ Emergency Phone Number: +63 917 123 4567`;
 
               {/* Progress Indicator */}
               {isProcessing && (
-                <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 space-y-2 animate-pulse">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 space-y-2 animate-pulse">
                   <div className="flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-300">
                     <span className="flex items-center gap-2">
-                      <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
-                      <span>{progressStatus || 'Scanning form document...'}</span>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                      <span className="truncate">{progressStatus || 'Scanning form document...'}</span>
                     </span>
                     <span>{progressPercent}%</span>
                   </div>
@@ -337,18 +337,18 @@ Emergency Phone Number: +63 917 123 4567`;
                         reader.readAsDataURL(file);
                       }
                     }}
-                    className="flex flex-col items-center justify-center p-8 sm:p-10 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50/70 hover:bg-blue-50/20 dark:bg-darkbg-950 dark:hover:bg-blue-950/10 cursor-pointer transition group text-center"
+                    className="flex flex-col items-center justify-center p-6 sm:p-10 rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50/70 hover:bg-blue-50/20 dark:bg-darkbg-950 dark:hover:bg-blue-950/10 cursor-pointer transition group text-center"
                   >
-                    <div className="w-14 h-14 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      <Upload className="w-7 h-7" />
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                      <Upload className="w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
-                    <p className="text-sm font-extrabold text-slate-800 dark:text-slate-100">
+                    <p className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-100">
                       Upload Filled Registration Form
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
+                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
                       Take a photo of the printed enrollment sheet or select an image file (PNG, JPG, WEBP).
                     </p>
-                    <span className="mt-3 px-3 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-sm">
+                    <span className="mt-3 px-3 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[11px] sm:text-xs font-bold transition shadow-sm">
                       Browse Files
                     </span>
                   </div>
@@ -358,7 +358,7 @@ Emergency Phone Number: +63 917 123 4567`;
               {/* TAB 2: LIVE CAMERA SCANNER */}
               {activeTab === 'camera' && !isProcessing && (
                 <div className="space-y-3">
-                  <div className="relative rounded-3xl overflow-hidden bg-slate-950 border-2 border-slate-800 aspect-video flex items-center justify-center">
+                  <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-950 border-2 border-slate-800 h-60 xs:h-72 sm:h-80 md:aspect-video flex items-center justify-center">
                     <video
                       ref={videoRef}
                       playsInline
@@ -367,15 +367,15 @@ Emergency Phone Number: +63 917 123 4567`;
                     />
 
                     {/* Form Reticle Overlay */}
-                    <div className="absolute inset-6 sm:inset-10 border-2 border-dashed border-blue-400/60 rounded-2xl pointer-events-none flex items-center justify-center">
-                      <span className="px-3 py-1 rounded-full bg-slate-950/80 text-blue-300 font-bold text-[11px] backdrop-blur-md">
+                    <div className="absolute inset-4 sm:inset-8 border-2 border-dashed border-blue-400/60 rounded-xl sm:rounded-2xl pointer-events-none flex items-center justify-center">
+                      <span className="px-2.5 py-1 rounded-full bg-slate-950/80 text-blue-300 font-bold text-[10px] sm:text-[11px] backdrop-blur-md">
                         Align Registration Form inside frame
                       </span>
                     </div>
 
                     {!isCameraActive && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-slate-950/90 text-white">
-                        <Camera className="w-8 h-8 text-slate-400 mb-2" />
+                        <Camera className="w-7 h-7 text-slate-400 mb-2" />
                         <p className="text-xs font-bold text-slate-300">Camera is initializing...</p>
                         <button
                           type="button"
@@ -393,7 +393,7 @@ Emergency Phone Number: +63 917 123 4567`;
                       type="button"
                       onClick={handleCaptureCamera}
                       disabled={!isCameraActive}
-                      className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white text-xs font-black shadow-lg shadow-blue-500/30 transition active:scale-95"
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white text-xs font-black shadow-lg shadow-blue-500/30 transition active:scale-95"
                     >
                       <Camera className="w-4 h-4" />
                       <span>Capture & Extract Form Data</span>
