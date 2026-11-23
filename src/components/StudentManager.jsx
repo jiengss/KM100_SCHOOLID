@@ -3,6 +3,7 @@ import ConfirmationModal from './ConfirmationModal';
 import RegistrationFormScannerModal from './RegistrationFormScannerModal';
 import ExcelImportModal from './ExcelImportModal';
 import { exportStudentsToExcel } from '../lib/excelService';
+import { convertToGoogleDriveDirectImageUrl, isGoogleDriveUrl } from '../lib/driveHelper';
 import { 
   Users, 
   UserPlus, 
@@ -830,8 +831,14 @@ export default function StudentManager({
                     <input
                       type="url"
                       value={formData.photo_url}
-                      onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
-                      placeholder="Paste image link: https://..."
+                      onChange={(e) => {
+                        let val = e.target.value.trim();
+                        if (isGoogleDriveUrl(val)) {
+                          val = convertToGoogleDriveDirectImageUrl(val, 800);
+                        }
+                        setFormData({ ...formData, photo_url: val });
+                      }}
+                      placeholder="Paste image URL or Google Drive link (e.g. drive.google.com/file/d/...)"
                       className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                     />
                   </div>

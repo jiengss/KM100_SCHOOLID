@@ -321,13 +321,18 @@ export default function ExcelImportModal({
                     <FileSpreadsheet className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-black text-slate-900 dark:text-white truncate max-w-xs">
                         {parsedData.fileName}
                       </span>
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-black">
                         {parsedData.students.length} Students Detected
                       </span>
+                      {parsedData.embeddedImages && parsedData.embeddedImages.length > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300 text-[10px] font-black">
+                          {parsedData.embeddedImages.length} Embedded Photos
+                        </span>
+                      )}
                     </div>
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
                       {selectedIndices.size} of {parsedData.students.length} selected for import
@@ -397,6 +402,7 @@ export default function ExcelImportModal({
                           className="w-3.5 h-3.5 rounded text-emerald-600"
                         />
                       </th>
+                      <th className="p-3 w-12 text-center">Photo</th>
                       <th className="p-3">School ID</th>
                       <th className="p-3">Student Name</th>
                       <th className="p-3">Technology Course</th>
@@ -421,6 +427,20 @@ export default function ExcelImportModal({
                               onChange={() => handleToggleRow(originalIndex)}
                               className="w-3.5 h-3.5 rounded text-emerald-600 cursor-pointer"
                             />
+                          </td>
+                          <td className="p-2 text-center" onClick={(e) => e.stopPropagation()}>
+                            {s.photo_url ? (
+                              <img
+                                src={s.photo_url}
+                                alt="Student"
+                                className="w-8 h-8 rounded-lg object-cover mx-auto border border-slate-300 dark:border-slate-700 shadow-sm"
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center text-[10px] font-bold mx-auto border border-slate-300 dark:border-slate-700">
+                                {s.first_name?.[0]}{s.last_name?.[0]}
+                              </div>
+                            )}
                           </td>
                           <td className="p-3 font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             {s.school_id}

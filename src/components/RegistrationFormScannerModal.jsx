@@ -21,12 +21,14 @@ import {
   Eye,
   ExternalLink,
   Info,
-  Cpu
+  Cpu,
+  Cloud
 } from 'lucide-react';
 import { COURSE_OPTIONS } from '../lib/mockData';
 import { parseRegistrationFormText } from '../lib/formParser';
 import { extractRegistrationFormWithGemini } from '../lib/geminiService';
 import { parseExcelStudentFile } from '../lib/excelService';
+import { convertToGoogleDriveDirectImageUrl, isGoogleDriveUrl } from '../lib/driveHelper';
 import { Html5Qrcode } from 'html5-qrcode';
 
 // Canvas preprocessing helper to optimize image for Gemini Vision and prevent memory limits
@@ -93,6 +95,7 @@ export default function RegistrationFormScannerModal({
   const [isSavingDirect, setIsSavingDirect] = useState(false);
   const [savedSuccessStudent, setSavedSuccessStudent] = useState(null);
   const [extractedByGemini, setExtractedByGemini] = useState(false);
+  const [gdriveInputUrl, setGdriveInputUrl] = useState('');
 
   // Camera State
   const videoRef = useRef(null);
@@ -307,8 +310,17 @@ Emergency Phone Number: +63 917 123 4567`;
       setExtractedData(firstStudent);
       setExtractedByGemini(false);
 
+      // If the Excel file contains embedded images (e.g. 2x2 photos or document scans), load the photo!
+      if (result.embeddedImages && result.embeddedImages.length > 0) {
+        setPreviewImage(result.embeddedImages[0].dataUrl);
+        setUseDocAsPhoto(true);
+      } else if (firstStudent.photo_url) {
+        setPreviewImage(firstStudent.photo_url);
+        setUseDocAsPhoto(true);
+      }
+
       if (result.students.length > 1) {
-        setInfoNotice(`Read Excel file "${result.fileName}" successfully! Loaded first student (1 of ${result.students.length} found). You can also use the Student Directory "Import Excel" feature to import all ${result.students.length} in batch.`);
+        setInfoNotice(`Read Excel file "${result.fileName}" successfully! Loaded student 1 of ${result.students.length} found (with ${result.embeddedImages?.length || 0} embedded images). You can also use the Student Directory "Import Excel" feature to import all ${result.students.length} in batch.`);
       } else {
         setInfoNotice(`Read Excel file "${result.fileName}" successfully! Review fields and save.`);
       }
@@ -320,6 +332,20 @@ Emergency Phone Number: +63 917 123 4567`;
       setErrorMessage('Could not read Excel file: ' + (err.message || err));
       setIsProcessing(false);
     }
+  };
+
+  // Handle Google Drive file link scanning
+  const handleScanGoogleDriveUrl = () => {
+    if (!gdriveInputUrl.trim()) return;
+    setErrorMessage('');
+    const cleanUrl = gdriveInputUrl.trim();
+    if (!isGoogleDriveUrl(cleanUrl)) {
+      setErrorMessage("Please enter a valid Google Drive file URL (e.g. https://drive.google.com/file/d/... or drive.google.com/open?id=...)");
+      return;
+    }
+    const directImageUrl = convertToGoogleDriveDirectImageUrl(cleanUrl, 1400);
+    setPreviewImage(directImageUrl);
+    processImageWithGemini(directImageUrl, 'gdrive_document.jpg');
   };
 
   // Handle uploaded form file
@@ -418,6 +444,7 @@ Emergency Phone Number: +63 917 123 4567`;
     setSavedSuccessStudent(null);
     setUseDocAsPhoto(false);
     setExtractedByGemini(false);
+    setGdriveInputUrl('');
   };
 
   if (!isOpen) return null;
@@ -594,7 +621,19 @@ Emergency Phone Number: +63 917 123 4567`;
                   }`}
                 >
                   <Camera className="w-3.5 h-3.5" />
-                  <span>Camera Scanner</span>
+                  <span>Camera</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('gdrive'); setErrorMessage(''); }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition active:scale-95 ${
+                    activeTab === 'gdrive'
+                      ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                  }`}
+                >
+                  <Cloud className="w-3.5 h-3.5 text-blue-500" />
+                  <span>Google Drive</span>
                 </button>
                 <button
                   type="button"
@@ -720,7 +759,55 @@ Emergency Phone Number: +63 917 123 4567`;
                 </div>
               )}
 
-              {/* TAB 3: PASTE FORM TEXT */}
+              {/* TAB 3: GOOGLE DRIVE LINK */}
+              {activeTab === 'gdrive' && !isProcessing && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/25 flex items-start gap-3">
+                    <Cloud className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                        Scan Registration Form or Photo from Google Drive
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Paste a shareable Google Drive link to a student's enrollment form, document scan, or 2x2 ID photo. Google Gemini 3.5 AI Vision will fetch and extract the student details automatically.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Google Drive File Link
+                    </label>
+                    <div className="relative">
+                      <ExternalLink className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="url"
+                        value={gdriveInputUrl}
+                        onChange={(e) => setGdriveInputUrl(e.target.value)}
+                        placeholder="e.g. https://drive.google.com/file/d/1A2B3C4D5E.../view?usp=sharing"
+                        className="w-full bg-slate-50 dark:bg-darkbg-950 border border-slate-300 dark:border-slate-800 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-mono"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                      Tip: Ensure the Google Drive file permission is set to "Anyone with the link can view".
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={!gdriveInputUrl.trim()}
+                      onClick={handleScanGoogleDriveUrl}
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 text-white text-xs font-bold transition shadow-md shadow-blue-500/25 active:scale-95 flex items-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Fetch & Scan with Gemini AI</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: PASTE FORM TEXT */}
               {activeTab === 'paste' && !isProcessing && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
