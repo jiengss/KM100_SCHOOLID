@@ -21,48 +21,54 @@ export function saveStoredSupabaseConfig(url, anonKey) {
   }
 }
 
-// In-memory / LocalStorage fallback database
+// In-memory / LocalStorage fallback database (starts empty, no mock data)
 const LOCAL_STUDENTS_KEY = 'km100_local_students';
 const LOCAL_LOGS_KEY = 'km100_local_attendance_logs';
 
 function getLocalStudents() {
   const data = localStorage.getItem(LOCAL_STUDENTS_KEY);
   if (!data) {
-    localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(INITIAL_STUDENTS));
-    return INITIAL_STUDENTS;
+    return [];
   }
   try {
     const parsed = JSON.parse(data);
-    // If old mock data was stored, automatically refresh with updated NC II courses
-    if (parsed.length > 0 && parsed[0].course_strand && !parsed[0].course_strand.includes('NC II')) {
-      localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(INITIAL_STUDENTS));
-      return INITIAL_STUDENTS;
+    if (!Array.isArray(parsed)) return [];
+    // Automatically purge legacy mock students (Sophia, Alexander, etc. with 2024-1000X)
+    const cleaned = parsed.filter(s => s && s.school_id && !s.school_id.startsWith('2024-1000'));
+    if (cleaned.length !== parsed.length) {
+      localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(cleaned));
     }
-    return parsed;
+    return cleaned;
   } catch {
-    return INITIAL_STUDENTS;
+    return [];
   }
 }
 
 function saveLocalStudents(students) {
-  localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(students));
+  localStorage.setItem(LOCAL_STUDENTS_KEY, JSON.stringify(students || []));
 }
 
 function getLocalLogs() {
   const data = localStorage.getItem(LOCAL_LOGS_KEY);
   if (!data) {
-    localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(INITIAL_LOGS));
-    return INITIAL_LOGS;
+    return [];
   }
   try {
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    if (!Array.isArray(parsed)) return [];
+    // Automatically purge legacy mock logs
+    const cleaned = parsed.filter(l => l && l.school_id && !l.school_id.startsWith('2024-1000'));
+    if (cleaned.length !== parsed.length) {
+      localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
-    return INITIAL_LOGS;
+    return [];
   }
 }
 
 function saveLocalLogs(logs) {
-  localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(logs));
+  localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(logs || []));
 }
 
 let supabaseInstance = null;
@@ -105,7 +111,10 @@ export const dbService = {
           .from('students')
           .select('*')
           .order('created_at', { ascending: false });
-        if (!error && data) return data;
+        if (!error && Array.isArray(data)) {
+          saveLocalStudents(data);
+          return data;
+        }
       } catch (err) {
         console.warn("Supabase fetch students failed, using local storage:", err);
       }
@@ -226,14 +235,25 @@ export const dbService = {
     return getLocalLogs().slice(0, limit);
   },
 
-  async createStudent(studentData) {
-    const id = crypto.randomUUID ? crypto.randomUUID() : `std-${Date.now()}`;
-    const newStudent = {
-      id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      status: 'ACTIVE',
-      ...studentData
+  async createStudent(rawStudentData) {
+    // Sanitize payload for Supabase PostgreSQL
+    const studentData = {
+      school_id: rawStudentData.school_id?.trim() || '',
+      rfid_uid: rawStudentData.rfid_uid?.trim() || null,
+      first_name: rawStudentData.first_name?.trim() || '',
+      middle_name: rawStudentData.middle_name?.trim() || null,
+      last_name: rawStudentData.last_name?.trim() || '',
+      gender: rawStudentData.gender || 'Unspecified',
+      grade_level: rawStudentData.grade_level || 'N/A',
+      section: rawStudentData.section || 'N/A',
+      course_strand: rawStudentData.course_strand || 'General Technology (NC II)',
+      email: rawStudentData.email?.trim() || null,
+      contact_number: rawStudentData.contact_number?.trim() || null,
+      photo_url: rawStudentData.photo_url?.trim() || null,
+      emergency_contact_name: rawStudentData.emergency_contact_name?.trim() || null,
+      emergency_contact_phone: rawStudentData.emergency_contact_phone?.trim() || null,
+      blood_type: rawStudentData.blood_type || 'Unknown',
+      status: rawStudentData.status || 'ACTIVE'
     };
 
     const sb = getSupabase();
@@ -245,21 +265,53 @@ export const dbService = {
           .select()
           .single();
         if (error) throw error;
-        if (data) return data;
+        if (data) {
+          // Immediately sync created student to local cache
+          const list = getLocalStudents();
+          const filtered = list.filter(s => s.id !== data.id && s.school_id !== data.school_id);
+          filtered.unshift(data);
+          saveLocalStudents(filtered);
+          return data;
+        }
       } catch (err) {
         console.error("Supabase create student error:", err);
         throw err;
       }
+    } else {
+      console.warn("Supabase is not configured. Saving student locally.");
     }
 
     // Local fallback
+    const id = crypto.randomUUID ? crypto.randomUUID() : `std-${Date.now()}`;
+    const newStudent = {
+      id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...studentData
+    };
+
     const list = getLocalStudents();
     list.unshift(newStudent);
     saveLocalStudents(list);
     return newStudent;
   },
 
-  async updateStudent(id, studentData) {
+  async updateStudent(id, rawStudentData) {
+    const studentData = {
+      ...rawStudentData,
+      school_id: rawStudentData.school_id?.trim() || '',
+      rfid_uid: rawStudentData.rfid_uid?.trim() || null,
+      first_name: rawStudentData.first_name?.trim() || '',
+      middle_name: rawStudentData.middle_name?.trim() || null,
+      last_name: rawStudentData.last_name?.trim() || '',
+      email: rawStudentData.email?.trim() || null,
+      contact_number: rawStudentData.contact_number?.trim() || null,
+      photo_url: rawStudentData.photo_url?.trim() || null,
+      emergency_contact_name: rawStudentData.emergency_contact_name?.trim() || null,
+      emergency_contact_phone: rawStudentData.emergency_contact_phone?.trim() || null,
+      updated_at: new Date().toISOString()
+    };
+
     const sb = getSupabase();
     if (sb) {
       try {
@@ -270,7 +322,15 @@ export const dbService = {
           .select()
           .single();
         if (error) throw error;
-        if (data) return data;
+        if (data) {
+          const list = getLocalStudents();
+          const idx = list.findIndex(s => s.id === id);
+          if (idx !== -1) {
+            list[idx] = data;
+            saveLocalStudents(list);
+          }
+          return data;
+        }
       } catch (err) {
         console.error("Supabase update student error:", err);
         throw err;

@@ -72,7 +72,7 @@ export default function ManualScanModal({ isOpen, onClose, onScan, sampleStudent
               <div className="flex items-center justify-between">
                 <span className="text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                  Quick Tap Test (Demo Cards)
+                  Quick Tap Registered Students
                 </span>
                 <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">Click to test instant scan</span>
               </div>
