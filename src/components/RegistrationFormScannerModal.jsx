@@ -20,16 +20,17 @@ import {
   ZoomIn,
   Eye,
   ExternalLink,
-  Info
+  Info,
+  Cpu
 } from 'lucide-react';
 import { COURSE_OPTIONS } from '../lib/mockData';
 import { parseRegistrationFormText } from '../lib/formParser';
-import Tesseract from 'tesseract.js';
+import { extractRegistrationFormWithGemini } from '../lib/geminiService';
 import { Html5Qrcode } from 'html5-qrcode';
 
-// Canvas preprocessing helper to optimize image for OCR and prevent browser memory crashes
-function preprocessImage(imgElement) {
-  const maxDim = 1500;
+// Canvas preprocessing helper to optimize image for Gemini Vision and prevent memory limits
+function preprocessImageForVision(imgElement) {
+  const maxDim = 1600;
   let width = imgElement.naturalWidth || imgElement.width || 800;
   let height = imgElement.naturalHeight || imgElement.height || 600;
 
@@ -43,38 +44,13 @@ function preprocessImage(imgElement) {
     }
   }
 
-  // Standard resized canvas
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(imgElement, 0, 0, width, height);
 
-  // High-contrast canvas for OCR binarization
-  const contrastCanvas = document.createElement('canvas');
-  contrastCanvas.width = width;
-  contrastCanvas.height = height;
-  const cCtx = contrastCanvas.getContext('2d');
-  cCtx.drawImage(imgElement, 0, 0, width, height);
-
-  try {
-    const imgData = cCtx.getImageData(0, 0, width, height);
-    const d = imgData.data;
-    // Convert to grayscale and apply contrast curve
-    for (let i = 0; i < d.length; i += 4) {
-      const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      // High contrast stretch
-      const adjusted = Math.max(0, Math.min(255, (gray - 128) * 1.35 + 128));
-      d[i] = adjusted;
-      d[i + 1] = adjusted;
-      d[i + 2] = adjusted;
-    }
-    cCtx.putImageData(imgData, 0, 0);
-  } catch (err) {
-    console.warn("Canvas image data filtering skipped:", err);
-  }
-
-  return { standardCanvas: canvas, contrastCanvas };
+  return canvas;
 }
 
 // Generate an official unique School ID in the KM100 format: e.g. 2025-00105
@@ -115,6 +91,7 @@ export default function RegistrationFormScannerModal({
   const [useDocAsPhoto, setUseDocAsPhoto] = useState(false);
   const [isSavingDirect, setIsSavingDirect] = useState(false);
   const [savedSuccessStudent, setSavedSuccessStudent] = useState(null);
+  const [extractedByGemini, setExtractedByGemini] = useState(false);
 
   // Camera State
   const videoRef = useRef(null);
@@ -174,19 +151,17 @@ Emergency Phone Number: +63 917 123 4567`;
     setIsCameraActive(false);
   };
 
-  // Run multi-tier OCR + QR extraction on an image
-  const processImage = async (imageSource, fileName = '') => {
+  // Run Gemini Vision AI extraction on the uploaded image
+  const processImageWithGemini = async (imageSource, fileName = '') => {
     setIsProcessing(true);
-    setProgressStatus('Optimizing document for scanning...');
-    setProgressPercent(15);
+    setProgressStatus('Preparing document for Gemini Vision AI...');
+    setProgressPercent(20);
     setErrorMessage('');
     setInfoNotice('');
-
-    let detectedText = '';
-    let canvasForOcr = null;
+    setExtractedByGemini(false);
 
     try {
-      // Step 1: Preprocess to Canvas to handle high resolution & improve contrast
+      // Step 1: Preprocess to Canvas to normalize image size & format
       const img = new Image();
       img.crossOrigin = "anonymous";
 
@@ -206,88 +181,65 @@ Emergency Phone Number: +63 917 123 4567`;
         img.src = imgSrc;
       });
 
-      const { standardCanvas, contrastCanvas } = preprocessImage(img);
-      canvasForOcr = contrastCanvas;
+      const processedCanvas = preprocessImageForVision(img);
+      const optimizedDataUrl = processedCanvas.toDataURL('image/jpeg', 0.88);
 
-      // Step 2: Check for 2D Form QR code with html5-qrcode
-      setProgressStatus('Checking for form QR / Barcode data...');
-      setProgressPercent(25);
+      // Step 2: Send to Gemini Vision API (Google Gemini 3.5 Flash)
+      setProgressStatus('Analyzing document with Google Gemini 3.5 Vision AI...');
+      setProgressPercent(55);
 
       try {
-        const qrScanner = new Html5Qrcode("form-qr-detector-hidden");
-        // Convert standard canvas to blob for scanner
-        const blob = await new Promise((res) => standardCanvas.toBlob(res, 'image/jpeg', 0.9));
-        if (blob) {
-          const fileObj = new File([blob], "temp_form_scan.jpg", { type: "image/jpeg" });
-          const qrResult = await qrScanner.scanFile(fileObj, false);
-          if (qrResult) {
-            detectedText = qrResult;
-          }
+        const geminiResult = await extractRegistrationFormWithGemini(optimizedDataUrl, existingStudents);
+        setProgressStatus('Gemini AI successfully extracted student information...');
+        setProgressPercent(95);
+
+        // Ensure School ID is populated
+        if (!geminiResult.school_id) {
+          geminiResult.school_id = generateSmartSchoolId(existingStudents);
         }
-        await qrScanner.clear();
-      } catch {
-        // No QR code found, will proceed to OCR
-      }
 
-      // Step 3: Run Tesseract OCR with safety timeout
-      if (!detectedText) {
-        setProgressStatus('Reading document text with Optical Character Recognition...');
-        setProgressPercent(40);
+        setExtractedData(geminiResult);
+        setExtractedByGemini(true);
+        setIsProcessing(false);
+        setProgressPercent(100);
+        return;
+      } catch (geminiErr) {
+        console.warn("Gemini API scan warning:", geminiErr);
+        // Fallback: Check for QR Code on the document
+        setProgressStatus('Checking for form QR data...');
+        setProgressPercent(75);
 
+        let qrText = '';
         try {
-          // Wrap Tesseract in a safety timeout of 12 seconds so it never hangs
-          const ocrPromise = Tesseract.recognize(
-            canvasForOcr || standardCanvas,
-            'eng',
-            {
-              logger: (m) => {
-                if (m.status === 'recognizing text') {
-                  setProgressPercent(40 + Math.round((m.progress || 0) * 50));
-                  setProgressStatus(`Recognizing document text: ${Math.round((m.progress || 0) * 100)}%`);
-                }
-              }
-            }
-          );
-
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("OCR timeout")), 12000)
-          );
-
-          const ocrResult = await Promise.race([ocrPromise, timeoutPromise]);
-          detectedText = ocrResult?.data?.text || '';
-        } catch (ocrErr) {
-          console.warn("Tesseract OCR completed with warning / fallback:", ocrErr);
-          setInfoNotice("Document uploaded! Since automatic text detection was partial or offline, we've loaded your document preview so you can verify the fields and save directly.");
+          const qrScanner = new Html5Qrcode("form-qr-detector-hidden");
+          const blob = await new Promise((res) => processedCanvas.toBlob(res, 'image/jpeg', 0.9));
+          if (blob) {
+            const fileObj = new File([blob], "temp_form.jpg", { type: "image/jpeg" });
+            qrText = await qrScanner.scanFile(fileObj, false);
+          }
+          await qrScanner.clear();
+        } catch {
+          // No QR code
         }
+
+        const parsed = parseRegistrationFormText(qrText || fileName);
+        if (!parsed.school_id) {
+          parsed.school_id = generateSmartSchoolId(existingStudents);
+        }
+        if (!parsed.course_strand) {
+          parsed.course_strand = COURSE_OPTIONS[0];
+        }
+
+        setExtractedData(parsed);
+        setInfoNotice("Document loaded! Gemini Vision AI had network latency, so we opened the review editor with your uploaded document preview to verify and save.");
+        setIsProcessing(false);
+        setProgressPercent(100);
       }
-    } catch (prepErr) {
-      console.warn("Image preparation error:", prepErr);
-      setInfoNotice("Document photo loaded! Please review and verify the student details below to save.");
+    } catch (err) {
+      console.error("Image loading failed:", err);
+      setErrorMessage("Could not read image file. Please choose a valid JPG, PNG, or WEBP document photo.");
+      setIsProcessing(false);
     }
-
-    // Step 4: Parse extracted fields
-    setProgressStatus('Extracting student registration fields...');
-    setProgressPercent(95);
-
-    // If filename has clues (e.g. "Juan_Dela_Cruz.png")
-    let fallbackText = detectedText;
-    if (!detectedText && fileName) {
-      fallbackText = fileName.replace(/[\._\-]/g, ' ');
-    }
-
-    const parsed = parseRegistrationFormText(fallbackText);
-
-    // Guarantee a valid School ID is ready
-    if (!parsed.school_id) {
-      parsed.school_id = generateSmartSchoolId(existingStudents);
-    }
-    if (!parsed.course_strand) {
-      parsed.course_strand = COURSE_OPTIONS[0];
-    }
-
-    setExtractedData(parsed);
-    setIsProcessing(false);
-    setProgressPercent(100);
   };
 
   // Capture freeze frame from video camera
@@ -300,14 +252,14 @@ Emergency Phone Number: +63 917 123 4567`;
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
     setPreviewImage(dataUrl);
-    processImage(dataUrl, 'camera_capture.jpg');
+    processImageWithGemini(dataUrl, 'camera_capture.jpg');
   };
 
   // Handle uploaded form file
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    processImage(file, file.name);
+    processImageWithGemini(file, file.name);
   };
 
   // Handle manual paste text
@@ -393,6 +345,7 @@ Emergency Phone Number: +63 917 123 4567`;
     setProgressStatus('');
     setSavedSuccessStudent(null);
     setUseDocAsPhoto(false);
+    setExtractedByGemini(false);
   };
 
   if (!isOpen) return null;
@@ -411,7 +364,7 @@ Emergency Phone Number: +63 917 123 4567`;
           <div className="relative max-w-4xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col">
             <div className="p-3 bg-slate-950 flex items-center justify-between border-b border-slate-800">
               <span className="text-xs font-bold text-slate-300 flex items-center gap-2">
-                <Eye className="w-4 h-4 text-blue-400" />
+                <Eye className="w-4 h-4 text-purple-400" />
                 Uploaded Registration Document Preview
               </span>
               <button 
@@ -432,20 +385,21 @@ Emergency Phone Number: +63 917 123 4567`;
         {/* Header */}
         <div className="p-3.5 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-darkbg-950/70 flex items-center justify-between">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 flex-shrink-0">
-              <FileText className="w-4 h-4 sm:w-6 sm:h-6" />
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-lg shadow-purple-500/25 flex-shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 <h3 className="text-xs sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">
-                  Read Registration Form & Save School ID
+                  Scan Registration Form
                 </h3>
-                <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 text-[9px] sm:text-[10px] font-black uppercase">
-                  OCR Engine
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 text-[9px] sm:text-[10px] font-black uppercase">
+                  <Cpu className="w-3 h-3 text-purple-500" />
+                  Gemini 3.5 AI Vision
                 </span>
               </div>
               <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                Reads student document and saves record directly to Supabase cloud
+                Powered by Google Gemini 3.5 Flash for high-accuracy document & handwriting recognition
               </p>
             </div>
           </div>
@@ -472,7 +426,7 @@ Emergency Phone Number: +63 917 123 4567`;
                   Student Saved to School ID System!
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
-                  The student information read from the uploaded document has been registered and synced directly to Supabase.
+                  Student information parsed by Gemini AI has been registered and synced directly to Supabase cloud.
                 </p>
               </div>
 
@@ -485,13 +439,13 @@ Emergency Phone Number: +63 917 123 4567`;
                     className="w-14 h-14 rounded-xl object-cover border border-slate-300 dark:border-slate-700 flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-14 h-14 rounded-xl bg-blue-500/20 text-blue-500 flex items-center justify-center font-black text-base flex-shrink-0">
+                  <div className="w-14 h-14 rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center font-black text-base flex-shrink-0">
                     {savedSuccessStudent.first_name?.[0]}{savedSuccessStudent.last_name?.[0]}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-500/20">
+                    <span className="font-mono text-xs font-black text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-500/20">
                       {savedSuccessStudent.school_id}
                     </span>
                     <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
@@ -516,7 +470,7 @@ Emergency Phone Number: +63 917 123 4567`;
                       onOpenCardModal(savedSuccessStudent);
                       onClose();
                     }}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-blue-500/25 transition flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-black shadow-lg shadow-purple-500/25 transition flex items-center justify-center gap-2"
                   >
                     <CreditCard className="w-4 h-4" />
                     <span>View / Print School ID Card</span>
@@ -551,7 +505,7 @@ Emergency Phone Number: +63 917 123 4567`;
                   onClick={() => { setActiveTab('upload'); setErrorMessage(''); }}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition active:scale-95 ${
                     activeTab === 'upload'
-                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                      ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
@@ -563,7 +517,7 @@ Emergency Phone Number: +63 917 123 4567`;
                   onClick={() => { setActiveTab('camera'); setErrorMessage(''); }}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition active:scale-95 ${
                     activeTab === 'camera'
-                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                      ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
@@ -575,7 +529,7 @@ Emergency Phone Number: +63 917 123 4567`;
                   onClick={() => { setActiveTab('paste'); setErrorMessage(''); }}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition active:scale-95 ${
                     activeTab === 'paste'
-                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                      ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
@@ -586,17 +540,17 @@ Emergency Phone Number: +63 917 123 4567`;
 
               {/* Progress Indicator */}
               {isProcessing && (
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 space-y-2 animate-pulse">
-                  <div className="flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-300">
+                <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 space-y-2.5 animate-pulse">
+                  <div className="flex items-center justify-between text-xs font-bold text-purple-700 dark:text-purple-300">
                     <span className="flex items-center gap-2">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                      <span className="truncate">{progressStatus || 'Scanning form document...'}</span>
+                      <Sparkles className="w-4 h-4 text-purple-600 animate-spin" />
+                      <span className="truncate">{progressStatus || 'Analyzing document with Gemini AI...'}</span>
                     </span>
                     <span>{progressPercent}%</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-blue-200 dark:bg-blue-900 overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-purple-200 dark:bg-purple-900 overflow-hidden">
                     <div 
-                      className="h-full bg-blue-600 dark:bg-blue-400 transition-all duration-300 rounded-full"
+                      className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 transition-all duration-300 rounded-full"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
@@ -620,21 +574,21 @@ Emergency Phone Number: +63 917 123 4567`;
                       e.preventDefault();
                       const file = e.dataTransfer.files?.[0];
                       if (file) {
-                        processImage(file, file.name);
+                        processImageWithGemini(file, file.name);
                       }
                     }}
-                    className="flex flex-col items-center justify-center p-6 sm:p-10 rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50/70 hover:bg-blue-50/20 dark:bg-darkbg-950 dark:hover:bg-blue-950/10 cursor-pointer transition group text-center"
+                    className="flex flex-col items-center justify-center p-6 sm:p-10 rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 bg-slate-50/70 hover:bg-purple-50/20 dark:bg-darkbg-950 dark:hover:bg-purple-950/10 cursor-pointer transition group text-center"
                   >
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                      <Upload className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                      <Sparkles className="w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
                     <p className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-100">
                       Upload Filled Registration Form / Photo
                     </p>
                     <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-                      Upload an image file (PNG, JPG, JPEG, WEBP) of the registration sheet or student ID photo.
+                      Select an image file (PNG, JPG, WEBP). Google Gemini 3.5 AI Vision will automatically read the fields.
                     </p>
-                    <span className="mt-3 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[11px] sm:text-xs font-bold transition shadow-sm">
+                    <span className="mt-3 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[11px] sm:text-xs font-bold transition shadow-sm">
                       Browse Files
                     </span>
                   </div>
@@ -653,8 +607,9 @@ Emergency Phone Number: +63 917 123 4567`;
                     />
 
                     {/* Form Reticle Overlay */}
-                    <div className="absolute inset-4 sm:inset-8 border-2 border-dashed border-blue-400/60 rounded-xl sm:rounded-2xl pointer-events-none flex items-center justify-center">
-                      <span className="px-2.5 py-1 rounded-full bg-slate-950/80 text-blue-300 font-bold text-[10px] sm:text-[11px] backdrop-blur-md">
+                    <div className="absolute inset-4 sm:inset-8 border-2 border-dashed border-purple-400/60 rounded-xl sm:rounded-2xl pointer-events-none flex items-center justify-center">
+                      <span className="px-2.5 py-1 rounded-full bg-slate-950/80 text-purple-300 font-bold text-[10px] sm:text-[11px] backdrop-blur-md flex items-center gap-1.5">
+                        <Sparkles className="w-3 h-3 text-purple-400" />
                         Align Registration Form inside frame
                       </span>
                     </div>
@@ -666,7 +621,7 @@ Emergency Phone Number: +63 917 123 4567`;
                         <button
                           type="button"
                           onClick={startCamera}
-                          className="mt-3 px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow"
+                          className="mt-3 px-3.5 py-1.5 rounded-xl bg-purple-600 text-white text-xs font-bold shadow"
                         >
                           Enable Camera
                         </button>
@@ -679,10 +634,10 @@ Emergency Phone Number: +63 917 123 4567`;
                       type="button"
                       onClick={handleCaptureCamera}
                       disabled={!isCameraActive}
-                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white text-xs font-black shadow-lg shadow-blue-500/30 transition active:scale-95"
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white text-xs font-black shadow-lg shadow-purple-500/30 transition active:scale-95"
                     >
-                      <Camera className="w-4 h-4" />
-                      <span>Capture & Extract Form Data</span>
+                      <Sparkles className="w-4 h-4" />
+                      <span>Capture & Analyze with Gemini AI</span>
                     </button>
                   </div>
                 </div>
@@ -698,7 +653,7 @@ Emergency Phone Number: +63 917 123 4567`;
                     <button
                       type="button"
                       onClick={() => setRawPastedText(sampleFormText)}
-                      className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                      className="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
                     >
                       <Sparkles className="w-3 h-3 text-amber-500" />
                       <span>Load Sample Form Data</span>
@@ -709,13 +664,13 @@ Emergency Phone Number: +63 917 123 4567`;
                     value={rawPastedText}
                     onChange={(e) => setRawPastedText(e.target.value)}
                     placeholder={`School ID: 2025-00101\nFirst Name: Juan\nMiddle Name: Bautista\nLast Name: Dela Cruz\nTechnology Course: Computer Engineering Technology (NC II)\nEmergency Contact Person: Maria Dela Cruz\nEmergency Phone Number: +63 917 123 4567`}
-                    className="w-full bg-slate-50 dark:bg-darkbg-950 border border-slate-300 dark:border-slate-800 rounded-2xl p-3 text-xs font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-darkbg-950 border border-slate-300 dark:border-slate-800 rounded-2xl p-3 text-xs font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:border-purple-500"
                   />
                   <div className="flex justify-end">
                     <button
                       type="button"
                       onClick={handleParsePastedText}
-                      className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-md shadow-blue-500/25 active:scale-95 flex items-center gap-1.5"
+                      className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-md shadow-purple-500/25 active:scale-95 flex items-center gap-1.5"
                     >
                       <span>Extract Form Fields</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -753,10 +708,10 @@ Emergency Phone Number: +63 917 123 4567`;
                   </button>
                 </div>
               ) : (
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-between">
+                <div className="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                    <span>Form read successfully! Review the fields below and save for School ID:</span>
+                    <Sparkles className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                    <span>{extractedByGemini ? "Form successfully analyzed by Gemini 3.5 AI Vision!" : "Form read successfully! Review and save for School ID:"}</span>
                   </span>
                   <button
                     type="button"
@@ -777,13 +732,13 @@ Emergency Phone Number: +63 917 123 4567`;
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                          <Eye className="w-3.5 h-3.5 text-blue-500" />
+                          <Eye className="w-3.5 h-3.5 text-purple-500" />
                           Uploaded Document
                         </span>
                         <button
                           type="button"
                           onClick={() => setIsEnlargedPreviewOpen(true)}
-                          className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                          className="text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
                         >
                           <ZoomIn className="w-3 h-3" />
                           <span>Enlarge</span>
@@ -813,7 +768,7 @@ Emergency Phone Number: +63 917 123 4567`;
                           type="checkbox"
                           checked={useDocAsPhoto}
                           onChange={(e) => setUseDocAsPhoto(e.target.checked)}
-                          className="w-3.5 h-3.5 rounded text-blue-600 border-slate-300 dark:border-slate-700 focus:ring-blue-500"
+                          className="w-3.5 h-3.5 rounded text-purple-600 border-slate-300 dark:border-slate-700 focus:ring-purple-500"
                         />
                         <span>Use uploaded photo as Student ID photo</span>
                       </label>
@@ -835,7 +790,7 @@ Emergency Phone Number: +63 917 123 4567`;
                           ...extractedData,
                           school_id: generateSmartSchoolId(existingStudents)
                         })}
-                        className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                        className="text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
                         title="Generate a new sequential School ID"
                       >
                         <RefreshCw className="w-2.5 h-2.5" />
@@ -850,7 +805,7 @@ Emergency Phone Number: +63 917 123 4567`;
                         value={extractedData.school_id || ''}
                         onChange={(e) => setExtractedData({ ...extractedData, school_id: e.target.value })}
                         placeholder="e.g. 2025-00101"
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs font-mono font-bold text-blue-600 dark:text-blue-400 focus:outline-none focus:border-blue-500 shadow-sm"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs font-mono font-bold text-purple-600 dark:text-purple-400 focus:outline-none focus:border-purple-500 shadow-sm"
                       />
                     </div>
                   </div>
@@ -869,7 +824,7 @@ Emergency Phone Number: +63 917 123 4567`;
                         value={extractedData.first_name || ''}
                         onChange={(e) => setExtractedData({ ...extractedData, first_name: e.target.value })}
                         placeholder="First Name"
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 shadow-sm"
                       />
                     </div>
 
@@ -884,7 +839,7 @@ Emergency Phone Number: +63 917 123 4567`;
                         value={extractedData.middle_name || ''}
                         onChange={(e) => setExtractedData({ ...extractedData, middle_name: e.target.value })}
                         placeholder="Middle Name"
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 shadow-sm"
                       />
                     </div>
 
@@ -900,7 +855,7 @@ Emergency Phone Number: +63 917 123 4567`;
                         value={extractedData.last_name || ''}
                         onChange={(e) => setExtractedData({ ...extractedData, last_name: e.target.value })}
                         placeholder="Last Name"
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 shadow-sm"
                       />
                     </div>
                   </div>
@@ -914,7 +869,7 @@ Emergency Phone Number: +63 917 123 4567`;
                     <select
                       value={extractedData.course_strand || COURSE_OPTIONS[0]}
                       onChange={(e) => setExtractedData({ ...extractedData, course_strand: e.target.value })}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 shadow-sm"
                     >
                       {COURSE_OPTIONS.map((c) => (
                         <option key={c} value={c}>
@@ -936,7 +891,7 @@ Emergency Phone Number: +63 917 123 4567`;
                         value={extractedData.emergency_contact_name || ''}
                         onChange={(e) => setExtractedData({ ...extractedData, emergency_contact_name: e.target.value })}
                         placeholder="Parent / Guardian Name"
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 shadow-sm"
                       />
                     </div>
 
@@ -950,7 +905,7 @@ Emergency Phone Number: +63 917 123 4567`;
                         value={extractedData.emergency_contact_phone || ''}
                         onChange={(e) => setExtractedData({ ...extractedData, emergency_contact_phone: e.target.value })}
                         placeholder="+63 900 000 0000"
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 shadow-sm"
                       />
                     </div>
                   </div>
