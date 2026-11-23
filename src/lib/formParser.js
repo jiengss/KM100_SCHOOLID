@@ -51,6 +51,7 @@ function cleanVal(str) {
 export function parseRegistrationFormText(rawText) {
   if (!rawText || typeof rawText !== 'string') {
     return {
+      school_id: '',
       first_name: '',
       middle_name: '',
       last_name: '',
@@ -63,6 +64,7 @@ export function parseRegistrationFormText(rawText) {
 
   const text = rawText.trim();
   const result = {
+    school_id: '',
     first_name: '',
     middle_name: '',
     last_name: '',
@@ -76,6 +78,7 @@ export function parseRegistrationFormText(rawText) {
   try {
     const json = JSON.parse(text);
     if (typeof json === 'object' && json !== null) {
+      result.school_id = json.school_id || json.schoolId || json.student_id || json.studentId || json.id || '';
       result.first_name = json.first_name || json.firstName || json.fn || '';
       result.middle_name = json.middle_name || json.middleName || json.mn || json.mi || '';
       result.last_name = json.last_name || json.lastName || json.ln || '';
@@ -83,7 +86,7 @@ export function parseRegistrationFormText(rawText) {
       result.emergency_contact_name = json.emergency_contact_name || json.emergencyContact || json.guardian || json.parent || '';
       result.emergency_contact_phone = json.emergency_contact_phone || json.emergencyPhone || json.contactNumber || json.phone || '';
       
-      if (result.first_name || result.last_name) {
+      if (result.first_name || result.last_name || result.school_id) {
         return result;
       }
     }
@@ -93,6 +96,18 @@ export function parseRegistrationFormText(rawText) {
 
   // 2. Line-by-line and Regex-based field extraction for paper form OCR
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+  // School ID / Student ID
+  const idMatch = text.match(/(?:school\s*id|student\s*id|id\s*(?:number|no\.?)|student\s*(?:number|no\.?))\s*[:=\-]\s*([A-Za-z0-9\-]+)/i);
+  if (idMatch) {
+    result.school_id = cleanVal(idMatch[1]);
+  } else {
+    // Fallback: look for 202X-XXXXX style ID format
+    const yearIdMatch = text.match(/\b(202[0-9]-[0-9A-Za-z]{3,7})\b/);
+    if (yearIdMatch) {
+      result.school_id = cleanVal(yearIdMatch[1]);
+    }
+  }
 
   // First Name
   const fnMatch = text.match(/(?:first\s*name|given\s*name|firstname|fn)\s*[:=\-]\s*([^\n\r,;|]+)/i);

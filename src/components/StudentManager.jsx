@@ -145,7 +145,7 @@ export default function StudentManager({
     if (fileInputRef.current) fileInputRef.current.value = '';
 
     setFormData({
-      school_id: '',
+      school_id: scannedData.school_id || '',
       rfid_uid: '',
       first_name: scannedData.first_name || '',
       middle_name: scannedData.middle_name || '',
@@ -153,7 +153,7 @@ export default function StudentManager({
       grade_level: 'N/A',
       section: 'N/A',
       course_strand: scannedData.course_strand || COURSE_OPTIONS[0],
-      photo_url: '',
+      photo_url: scannedData.photo_url || '',
       emergency_contact_name: scannedData.emergency_contact_name || '',
       emergency_contact_phone: scannedData.emergency_contact_phone || '',
       blood_type: 'O+',
@@ -877,11 +877,14 @@ export default function StudentManager({
         icon={Trash2}
       />
 
-      {/* Registration Form Scanner Modal (Camera / Document OCR / Paste) */}
+      {/* Registration Form Scanner Modal (Camera / Document OCR / Paste & Direct Save) */}
       <RegistrationFormScannerModal
         isOpen={isFormScannerOpen}
         onClose={() => setIsFormScannerOpen(false)}
         onApplyData={handleApplyScannedFormData}
+        onSaveStudentDirectly={onAddStudent}
+        existingStudents={students}
+        onOpenCardModal={onOpenCardModal}
       />
     </div>
   );

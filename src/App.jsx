@@ -203,8 +203,10 @@ export default function App() {
     try {
       const created = await dbService.createStudent(newStudentData);
       setStudents((prev) => [created, ...prev]);
+      return created;
     } catch (err) {
       alert("Failed to create student: " + err.message);
+      return null;
     }
   };
 
