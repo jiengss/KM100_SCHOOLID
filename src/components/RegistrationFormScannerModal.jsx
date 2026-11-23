@@ -1224,28 +1224,28 @@ Emergency Phone Number: +63 917 123 4567`;
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center justify-between">
-                        <span>Emergency Contact</span>
+                        <span>Parent / Guardian Name</span>
                         {extractedData.emergency_contact_name && <Check className="w-2.5 h-2.5 text-emerald-500" />}
                       </label>
                       <input
                         type="text"
                         value={extractedData.emergency_contact_name || ''}
                         onChange={(e) => setExtractedData({ ...extractedData, emergency_contact_name: e.target.value })}
-                        placeholder="Parent / Guardian Name"
+                        placeholder="e.g. Helen"
                         className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 shadow-sm"
                       />
                     </div>
 
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center justify-between">
-                        <span>Emergency Phone</span>
+                        <span>Emergency Contact Number</span>
                         {extractedData.emergency_contact_phone && <Check className="w-2.5 h-2.5 text-emerald-500" />}
                       </label>
                       <input
                         type="text"
                         value={extractedData.emergency_contact_phone || ''}
                         onChange={(e) => setExtractedData({ ...extractedData, emergency_contact_phone: e.target.value })}
-                        placeholder="+63 900 000 0000"
+                        placeholder="e.g. 12345678891"
                         className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 shadow-sm"
                       />
                     </div>

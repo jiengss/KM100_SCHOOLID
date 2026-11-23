@@ -226,12 +226,19 @@ export async function parseExcelStudentFile(fileInput, existingStudents = [], ta
   // Build clean column map (normalized name -> column index)
   const colIndexMap = {};
   rawHeaderRow.forEach((h, colIdx) => {
-    const cleanH = h.toLowerCase().replace(/[\s_\.\-\/\#\(\)]/g, '');
+    const cleanH = h.toLowerCase().replace(/[^a-z0-9]/g, '');
     colIndexMap[cleanH] = colIdx;
   });
 
   const parsedStudents = [];
   const rawDisplayRows = [];
+
+  const isPhoneHeader = (headerName) => /(?:phone|mobile|tel|cell|number|no|num)/i.test(headerName);
+  const isNumericPhone = (val) => {
+    if (!val) return false;
+    const cleaned = String(val).replace(/[\s\-\+\(\)\.]/g, '');
+    return /^\d{7,15}$/.test(cleaned);
+  };
 
   rawDataRows.forEach((rowArray, rowIndex) => {
     if (!Array.isArray(rowArray) || rowArray.every(c => cleanStr(c) === '')) {
@@ -242,7 +249,7 @@ export async function parseExcelStudentFile(fileInput, existingStudents = [], ta
     const getVal = (...keys) => {
       // Pass 1: Exact matches first
       for (const k of keys) {
-        const cleanK = k.toLowerCase().replace(/[\s_\.\-\/\#\(\)]/g, '');
+        const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
         if (colIndexMap[cleanK] !== undefined) {
           const val = rowArray[colIndexMap[cleanK]];
           if (val !== undefined && val !== null && cleanStr(val) !== '') {
@@ -253,7 +260,7 @@ export async function parseExcelStudentFile(fileInput, existingStudents = [], ta
 
       // Pass 2: Clean substring match (only if key length >= 3 to avoid false positive collisions)
       for (const k of keys) {
-        const cleanK = k.toLowerCase().replace(/[\s_\.\-\/\#\(\)]/g, '');
+        const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
         if (cleanK.length < 3) continue;
 
         for (const [colName, colIdx] of Object.entries(colIndexMap)) {
@@ -350,9 +357,92 @@ export async function parseExcelStudentFile(fileInput, existingStudents = [], ta
     const rawCourse = getVal('course', 'coursestrand', 'technologycourse', 'techcourse', 'strand', 'program', 'track', 'specialization');
     const matchedCourse = matchTechnologyCourse(rawCourse);
 
-    // 4. Emergency Contacts
-    const emergencyContactName = toTitleCase(getVal('emergencycontactname', 'emergencycontact', 'parentname', 'guardian', 'parent', 'contactperson', 'emergency'));
-    const emergencyContactPhone = formatExcelPhoneNumber(getVal('emergencycontactphone', 'emergencyphone', 'contactnumber', 'contactno', 'parentphone', 'phone', 'mobile', 'cellphone'));
+    // 4. Emergency Contacts (Accurately separate Parent/Guardian Name from Contact Number)
+    let rawEcName = '';
+    const contactNameKeys = [
+      'parentsguardianname', 'parentguardianname', 'guardianname', 'parentname',
+      'parentsguardian', 'parentguardian', 'guardian', 'parent', 'contactperson',
+      'emergencycontactname', 'emergencyname', 'contactname'
+    ];
+
+    // Pass 1: Exact matches on non-phone headers
+    for (const k of contactNameKeys) {
+      const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (colIndexMap[cleanK] !== undefined && !isPhoneHeader(rawHeaderRow[colIndexMap[cleanK]])) {
+        const val = rowArray[colIndexMap[cleanK]];
+        if (val !== undefined && val !== null && cleanStr(val) !== '') {
+          rawEcName = cleanStr(val);
+          break;
+        }
+      }
+    }
+
+    // Pass 2: Clean substring match on non-phone headers
+    if (!rawEcName) {
+      for (const k of contactNameKeys) {
+        const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanK.length < 3) continue;
+        for (const [colName, colIdx] of Object.entries(colIndexMap)) {
+          if (!isPhoneHeader(rawHeaderRow[colIdx]) && colName.includes(cleanK)) {
+            const val = rowArray[colIdx];
+            if (val !== undefined && val !== null && cleanStr(val) !== '') {
+              rawEcName = cleanStr(val);
+              break;
+            }
+          }
+        }
+        if (rawEcName) break;
+      }
+    }
+
+    let rawEcPhone = '';
+    const contactPhoneKeys = [
+      'parentsemergencycontactnumber', 'parentsemergencycontactphone',
+      'emergencycontactnumber', 'emergencycontactphone', 'contactnumber',
+      'emergencyphone', 'emergencynumber', 'parentphone', 'guardianphone',
+      'contactno', 'phone', 'mobile', 'cellphone', 'cell'
+    ];
+
+    // Pass 1: Exact matches for phone
+    for (const k of contactPhoneKeys) {
+      const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (colIndexMap[cleanK] !== undefined) {
+        const val = rowArray[colIndexMap[cleanK]];
+        if (val !== undefined && val !== null && cleanStr(val) !== '') {
+          rawEcPhone = cleanStr(val);
+          break;
+        }
+      }
+    }
+
+    // Pass 2: Substring matches for phone
+    if (!rawEcPhone) {
+      for (const k of contactPhoneKeys) {
+        const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanK.length < 3) continue;
+        for (const [colName, colIdx] of Object.entries(colIndexMap)) {
+          if (colName.includes(cleanK)) {
+            const val = rowArray[colIdx];
+            if (val !== undefined && val !== null && cleanStr(val) !== '') {
+              rawEcPhone = cleanStr(val);
+              break;
+            }
+          }
+        }
+        if (rawEcPhone) break;
+      }
+    }
+
+    // Value-based verification: If rawEcName is actually numeric digits, it's a phone number
+    if (rawEcName && isNumericPhone(rawEcName)) {
+      if (!rawEcPhone) {
+        rawEcPhone = rawEcName;
+      }
+      rawEcName = '';
+    }
+
+    const emergencyContactName = toTitleCase(rawEcName);
+    const emergencyContactPhone = formatExcelPhoneNumber(rawEcPhone);
 
     // 5. RFID UID
     let rfidUid = getVal('rfiduid', 'rfid', 'carduid', 'rfidcard', 'card');

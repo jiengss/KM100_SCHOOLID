@@ -186,5 +186,13 @@ export function parseRegistrationFormText(rawText) {
     }
   }
 
+  // Value-based verification: If emergency_contact_name is numeric digits, move to phone
+  if (result.emergency_contact_name && /^\+?[\d\s\-\(\)\.]{7,}$/.test(result.emergency_contact_name)) {
+    if (!result.emergency_contact_phone) {
+      result.emergency_contact_phone = result.emergency_contact_name;
+    }
+    result.emergency_contact_name = '';
+  }
+
   return result;
 }

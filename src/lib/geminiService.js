@@ -251,14 +251,25 @@ Return strictly a valid JSON object matching this schema:
   // Normalize returned fields
   const finalCourse = matchTechnologyCourse(parsedJson.technology_course || parsedJson.course || COURSE_OPTIONS[0]);
 
+  let ecName = String(parsedJson.emergency_contact_name || '').trim();
+  let ecPhone = String(parsedJson.emergency_contact_phone || '').trim();
+
+  // If ecName is purely numeric digits (phone number), move it to ecPhone
+  if (ecName && /^\+?[\d\s\-\(\)\.]{7,}$/.test(ecName)) {
+    if (!ecPhone) {
+      ecPhone = ecName;
+    }
+    ecName = '';
+  }
+
   return {
     school_id: parsedJson.school_id || '',
     first_name: firstName,
     middle_name: middleName,
     last_name: lastName,
     course_strand: finalCourse,
-    emergency_contact_name: String(parsedJson.emergency_contact_name || '').trim(),
-    emergency_contact_phone: String(parsedJson.emergency_contact_phone || '').trim(),
+    emergency_contact_name: ecName,
+    emergency_contact_phone: ecPhone,
     confidence_score: parsedJson.confidence_score || 0.95,
     photo_url: dataUrl || '',
     photo: dataUrl || '',
