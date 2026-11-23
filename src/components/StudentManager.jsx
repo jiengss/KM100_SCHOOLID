@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import ConfirmationModal from './ConfirmationModal';
 import { 
   Users, 
@@ -15,7 +15,12 @@ import {
   GraduationCap,
   Filter,
   ChevronDown,
-  Database
+  Database,
+  Upload,
+  Camera,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Check
 } from 'lucide-react';
 import { COURSE_OPTIONS } from '../lib/mockData';
 
@@ -35,6 +40,12 @@ export default function StudentManager({
   const [studentToDelete, setStudentToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Photo Upload State
+  const fileInputRef = useRef(null);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+
   // Form State
   const [formData, setFormData] = useState({
     school_id: '',
@@ -52,8 +63,80 @@ export default function StudentManager({
     status: 'ACTIVE'
   });
 
+  const processAndSetImage = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select a valid image file (JPG, PNG, WEBP).');
+      return;
+    }
+    setUploadError('');
+    setIsProcessingImage(true);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 480;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height = Math.round((height * MAX_SIZE) / width);
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width = Math.round((width * MAX_SIZE) / height);
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to JPEG with 0.85 quality for sharp ID photo and compact size (~30KB)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          setFormData((prev) => ({ ...prev, photo_url: dataUrl }));
+        } catch (err) {
+          console.error('Error compressing image:', err);
+          setFormData((prev) => ({ ...prev, photo_url: event.target.result }));
+        } finally {
+          setIsProcessingImage(false);
+        }
+      };
+      img.onerror = () => {
+        setUploadError('Failed to read image file.');
+        setIsProcessingImage(false);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processAndSetImage(file);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData((prev) => ({ ...prev, photo_url: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleOpenAdd = () => {
     setEditingStudent(null);
+    setUploadError('');
+    setShowUrlInput(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setFormData({
       school_id: '',
       rfid_uid: '',
@@ -74,6 +157,9 @@ export default function StudentManager({
 
   const handleOpenEdit = (student) => {
     setEditingStudent(student);
+    setUploadError('');
+    setShowUrlInput(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setFormData({ ...student });
     setIsModalOpen(true);
   };
@@ -400,15 +486,115 @@ export default function StudentManager({
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Photo Image URL</label>
+              {/* Student Photo Upload & Preview Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Student Photo
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                  >
+                    <LinkIcon className="w-3 h-3" />
+                    <span>{showUrlInput ? 'Hide URL field' : 'Or paste image URL'}</span>
+                  </button>
+                </div>
+
                 <input
-                  type="url"
-                  value={formData.photo_url}
-                  onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleFileChange}
+                  className="hidden"
                 />
+
+                {formData.photo_url ? (
+                  /* Photo Preview State */
+                  <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-emerald-500/40 dark:border-emerald-500/30">
+                    <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden border-2 border-emerald-500 shadow-md flex-shrink-0 bg-slate-200 dark:bg-slate-800">
+                      <img
+                        src={formData.photo_url}
+                        alt="Student Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute bottom-1 right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow">
+                        <Check className="w-2.5 h-2.5" />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                        Student Photo Loaded
+                      </p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Ready for 3" × 2" ID Badge & Gate Scanner
+                      </p>
+
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 transition active:scale-95 flex items-center gap-1"
+                        >
+                          <Camera className="w-3 h-3" />
+                          <span>Change Photo</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleRemovePhoto}
+                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 transition active:scale-95 flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Upload Drop Zone */
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) processAndSetImage(file);
+                    }}
+                    className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 bg-slate-50/80 hover:bg-orange-50/20 dark:bg-slate-950/60 dark:hover:bg-orange-950/10 cursor-pointer transition group text-center"
+                  >
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                      {isProcessingImage ? (
+                        <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Upload className="w-5 h-5 text-orange-500 dark:text-orange-400" />
+                      )}
+                    </div>
+                    <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                      {isProcessingImage ? 'Optimizing photo...' : 'Click to Upload Student Photo'}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Choose from device or drag & drop (JPG, PNG, WEBP)
+                    </p>
+                  </div>
+                )}
+
+                {uploadError && (
+                  <p className="text-[11px] font-semibold text-red-500">{uploadError}</p>
+                )}
+
+                {showUrlInput && (
+                  <div className="pt-1">
+                    <input
+                      type="url"
+                      value={formData.photo_url}
+                      onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
+                      placeholder="Paste image link: https://..."
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
