@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import ConfirmationModal from './ConfirmationModal';
 import RegistrationFormScannerModal from './RegistrationFormScannerModal';
+import ExcelImportModal from './ExcelImportModal';
+import { exportStudentsToExcel } from '../lib/excelService';
 import { 
   Users, 
   UserPlus, 
@@ -23,7 +25,9 @@ import {
   Link as LinkIcon, 
   Check,
   ScanLine,
-  FileText
+  FileText,
+  FileSpreadsheet,
+  Download
 } from 'lucide-react';
 import { COURSE_OPTIONS } from '../lib/mockData';
 
@@ -40,6 +44,7 @@ export default function StudentManager({
   const [selectedCourse, setSelectedCourse] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFormScannerOpen, setIsFormScannerOpen] = useState(false);
+  const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
   const [formScannedBanner, setFormScannedBanner] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [studentToDelete, setStudentToDelete] = useState(null);
@@ -271,6 +276,15 @@ export default function StudentManager({
 
         <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
           <button
+            onClick={() => setIsExcelImportOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-600/25 active:scale-95 hover:scale-[1.02]"
+            title="Import student roster in bulk from Excel file (.xlsx, .xls, .csv)"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+            <span>Import Excel</span>
+          </button>
+
+          <button
             onClick={() => setIsFormScannerOpen(true)}
             className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/25 active:scale-95 hover:scale-[1.02]"
             title="Scan student enrollment / registration form via Camera, Image Upload, or Text"
@@ -322,6 +336,17 @@ export default function StudentManager({
           </select>
           <ChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
+
+        {/* Export to Excel Button */}
+        <button
+          type="button"
+          onClick={() => exportStudentsToExcel(filteredStudents)}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition shadow-sm active:scale-95 flex-shrink-0"
+          title="Export current filtered student directory to Excel (.xlsx)"
+        >
+          <Download className="w-3.5 h-3.5 text-emerald-500" />
+          <span>Export Excel</span>
+        </button>
       </div>
 
       {/* Students Directory Container (Responsive: Cards on Mobile, Table on Desktop) */}
@@ -885,6 +910,15 @@ export default function StudentManager({
         onSaveStudentDirectly={onAddStudent}
         existingStudents={students}
         onOpenCardModal={onOpenCardModal}
+      />
+
+      {/* Excel Spreadsheet Import Modal */}
+      <ExcelImportModal
+        isOpen={isExcelImportOpen}
+        onClose={() => setIsExcelImportOpen(false)}
+        onBatchAddStudents={onAddStudent}
+        existingStudents={students}
+        isSupabaseConfigured={isSupabaseConfigured}
       />
     </div>
   );

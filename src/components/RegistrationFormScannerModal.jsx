@@ -26,6 +26,7 @@ import {
 import { COURSE_OPTIONS } from '../lib/mockData';
 import { parseRegistrationFormText } from '../lib/formParser';
 import { extractRegistrationFormWithGemini } from '../lib/geminiService';
+import { parseExcelStudentFile } from '../lib/excelService';
 import { Html5Qrcode } from 'html5-qrcode';
 
 // Canvas preprocessing helper to optimize image for Gemini Vision and prevent memory limits
@@ -255,11 +256,54 @@ Emergency Phone Number: +63 917 123 4567`;
     processImageWithGemini(dataUrl, 'camera_capture.jpg');
   };
 
+  // Handle uploaded Excel spreadsheet
+  const handleProcessExcelFile = async (file) => {
+    setIsProcessing(true);
+    setProgressStatus('Reading Excel file data...');
+    setProgressPercent(35);
+    setErrorMessage('');
+    setInfoNotice('');
+
+    try {
+      const result = await parseExcelStudentFile(file, existingStudents);
+      if (!result.students || result.students.length === 0) {
+        setErrorMessage('No student records found in this Excel sheet. Please make sure First Name and Last Name columns are present.');
+        setIsProcessing(false);
+        return;
+      }
+
+      setProgressStatus('Extracted student records from Excel...');
+      setProgressPercent(90);
+
+      const firstStudent = result.students[0];
+      setExtractedData(firstStudent);
+      setExtractedByGemini(false);
+
+      if (result.students.length > 1) {
+        setInfoNotice(`Read Excel file "${result.fileName}" successfully! Loaded first student (1 of ${result.students.length} found). You can also use the Student Directory "Import Excel" feature to import all ${result.students.length} in batch.`);
+      } else {
+        setInfoNotice(`Read Excel file "${result.fileName}" successfully! Review fields and save.`);
+      }
+
+      setIsProcessing(false);
+      setProgressPercent(100);
+    } catch (err) {
+      console.error('Excel parse failed:', err);
+      setErrorMessage('Could not read Excel file: ' + (err.message || err));
+      setIsProcessing(false);
+    }
+  };
+
   // Handle uploaded form file
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    processImageWithGemini(file, file.name);
+    const name = file.name.toLowerCase();
+    if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) {
+      handleProcessExcelFile(file);
+    } else {
+      processImageWithGemini(file, file.name);
+    }
   };
 
   // Handle manual paste text
@@ -563,7 +607,7 @@ Emergency Phone Number: +63 917 123 4567`;
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/*, .xlsx, .xls, .csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                     onChange={handleFileUpload}
                     className="hidden"
                   />
@@ -574,7 +618,12 @@ Emergency Phone Number: +63 917 123 4567`;
                       e.preventDefault();
                       const file = e.dataTransfer.files?.[0];
                       if (file) {
-                        processImageWithGemini(file, file.name);
+                        const name = file.name.toLowerCase();
+                        if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) {
+                          handleProcessExcelFile(file);
+                        } else {
+                          processImageWithGemini(file, file.name);
+                        }
                       }
                     }}
                     className="flex flex-col items-center justify-center p-6 sm:p-10 rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 bg-slate-50/70 hover:bg-purple-50/20 dark:bg-darkbg-950 dark:hover:bg-purple-950/10 cursor-pointer transition group text-center"
@@ -583,13 +632,13 @@ Emergency Phone Number: +63 917 123 4567`;
                       <Sparkles className="w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
                     <p className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-100">
-                      Upload Filled Registration Form / Photo
+                      Upload Registration Form, Photo, or Excel File
                     </p>
                     <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-                      Select an image file (PNG, JPG, WEBP). Google Gemini 3.5 AI Vision will automatically read the fields.
+                      Upload an image file (PNG, JPG, WEBP) or an Excel spreadsheet (.XLSX, .XLS, .CSV). Gemini Vision AI & Excel parser will automatically read the fields.
                     </p>
                     <span className="mt-3 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[11px] sm:text-xs font-bold transition shadow-sm">
-                      Browse Files
+                      Browse Files (.PNG, .JPG, .XLSX, .CSV)
                     </span>
                   </div>
                 </div>
