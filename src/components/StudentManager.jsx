@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import ConfirmationModal from './ConfirmationModal';
+import RegistrationFormScannerModal from './RegistrationFormScannerModal';
 import { 
   Users, 
   UserPlus, 
@@ -10,17 +11,19 @@ import {
   CheckCircle2, 
   X, 
   Plus, 
-  Sparkles,
-  Phone,
-  GraduationCap,
-  Filter,
-  ChevronDown,
-  Database,
-  Upload,
-  Camera,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  Check
+  Sparkles, 
+  Phone, 
+  GraduationCap, 
+  Filter, 
+  ChevronDown, 
+  Database, 
+  Upload, 
+  Camera, 
+  Image as ImageIcon, 
+  Link as LinkIcon, 
+  Check,
+  ScanLine,
+  FileText
 } from 'lucide-react';
 import { COURSE_OPTIONS } from '../lib/mockData';
 
@@ -36,6 +39,8 @@ export default function StudentManager({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFormScannerOpen, setIsFormScannerOpen] = useState(false);
+  const [formScannedBanner, setFormScannedBanner] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [studentToDelete, setStudentToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -132,10 +137,36 @@ export default function StudentManager({
     }
   };
 
+  const handleApplyScannedFormData = (scannedData) => {
+    setEditingStudent(null);
+    setUploadError('');
+    setShowUrlInput(false);
+    setFormScannedBanner(true);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+
+    setFormData({
+      school_id: '',
+      rfid_uid: '',
+      first_name: scannedData.first_name || '',
+      middle_name: scannedData.middle_name || '',
+      last_name: scannedData.last_name || '',
+      grade_level: 'N/A',
+      section: 'N/A',
+      course_strand: scannedData.course_strand || COURSE_OPTIONS[0],
+      photo_url: '',
+      emergency_contact_name: scannedData.emergency_contact_name || '',
+      emergency_contact_phone: scannedData.emergency_contact_phone || '',
+      blood_type: 'O+',
+      status: 'ACTIVE'
+    });
+    setIsModalOpen(true);
+  };
+
   const handleOpenAdd = () => {
     setEditingStudent(null);
     setUploadError('');
     setShowUrlInput(false);
+    setFormScannedBanner(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
     setFormData({
       school_id: '',
@@ -159,6 +190,7 @@ export default function StudentManager({
     setEditingStudent(student);
     setUploadError('');
     setShowUrlInput(false);
+    setFormScannedBanner(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
     setFormData({ ...student });
     setIsModalOpen(true);
@@ -237,13 +269,24 @@ export default function StudentManager({
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-600/30 self-start sm:self-auto active:scale-95"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>Register New Student</span>
-        </button>
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+          <button
+            onClick={() => setIsFormScannerOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/25 active:scale-95 hover:scale-[1.02]"
+            title="Scan student enrollment / registration form via Camera, Image Upload, or Text"
+          >
+            <ScanLine className="w-4 h-4 text-cyan-200" />
+            <span>Scan Registration Form</span>
+          </button>
+
+          <button
+            onClick={handleOpenAdd}
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-600/30 active:scale-95"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Register Student</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter & Search Bar */}
@@ -311,13 +354,22 @@ export default function StudentManager({
                           : "Try adjusting your search criteria or course filter."}
                       </p>
                       {students.length === 0 && (
-                        <button
-                          onClick={handleOpenAdd}
-                          className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-600/30 active:scale-95"
-                        >
-                          <UserPlus className="w-3.5 h-3.5" />
-                          <span>Register First Student</span>
-                        </button>
+                        <div className="mt-3 flex items-center justify-center gap-2.5 flex-wrap">
+                          <button
+                            onClick={() => setIsFormScannerOpen(true)}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-indigo-600/30 active:scale-95"
+                          >
+                            <ScanLine className="w-3.5 h-3.5 text-cyan-200" />
+                            <span>Scan Registration Form</span>
+                          </button>
+                          <button
+                            onClick={handleOpenAdd}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white rounded-xl text-xs font-bold transition active:scale-95 border border-slate-300 dark:border-slate-700"
+                          >
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span>Manual Entry</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                   </td>
@@ -408,6 +460,54 @@ export default function StudentManager({
             </div>
 
             <form onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto space-y-3.5 sm:space-y-4 touch-scroll">
+              {/* Form Scanned Success Notification Banner */}
+              {formScannedBanner && (
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold">Registration Form Scanned & Loaded!</p>
+                      <p className="text-[10px] text-emerald-700/80 dark:text-emerald-400">
+                        First Name, Middle Name, Last Name, Course, and Emergency Contacts auto-filled.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormScannedBanner(false)}
+                    className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 text-xs font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              {/* Shortcut to Scan Registration Form if not scanned yet */}
+              {!editingStudent && !formScannedBanner && (
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <ScanLine className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-indigo-950 dark:text-indigo-200">
+                        Have a filled registration sheet?
+                      </p>
+                      <p className="text-[10px] text-indigo-600 dark:text-indigo-400">
+                        Scan with camera or upload form to auto-fill all 6 fields
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsFormScannerOpen(true)}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold shadow-sm transition active:scale-95 flex items-center gap-1.5"
+                  >
+                    <span>Scan Form</span>
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -659,6 +759,13 @@ export default function StudentManager({
         cancelText="Keep Record"
         variant="danger"
         icon={Trash2}
+      />
+
+      {/* Registration Form Scanner Modal (Camera / Document OCR / Paste) */}
+      <RegistrationFormScannerModal
+        isOpen={isFormScannerOpen}
+        onClose={() => setIsFormScannerOpen(false)}
+        onApplyData={handleApplyScannedFormData}
       />
     </div>
   );
