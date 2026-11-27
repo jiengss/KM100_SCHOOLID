@@ -7,7 +7,7 @@
 import { INITIAL_STUDENTS, INITIAL_LOGS } from './mockData';
 import { generateSmartSchoolId, generateSmartRfidUid, isValidSchoolId } from './idGenerator';
 
-const API_BASE = (import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
+const API_BASE = (import.meta.env?.VITE_API_URL || 'https://smokeless-unstitch-upward.ngrok-free.dev/api/v1').replace(/\/$/, '');
 
 const AUTH_SESSION_KEY = 'km100_auth_user';
 const LOCAL_STUDENTS_KEY = 'km100_local_students';
